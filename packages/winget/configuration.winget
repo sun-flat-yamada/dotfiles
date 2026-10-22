@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc.schema.json
+# ==============================================================================
+# WinGet Configuration (DSC) for Windows 11 Developer Workstation
+# Layering Policy:
+#   - WinGet DSC manages OS developer settings and system-level GUI/core apps.
+#   - Scoop (packages/scoop/scoopfile.json) manages user-space CLI tools & fonts.
+#   - mise (packages/mise/config.toml) manages polyglot language runtimes.
+# Execute with: winget configure -f packages/winget/configuration.winget
+# Validate with: winget configure validate -f packages/winget/configuration.winget
+# ==============================================================================
+properties:
+  configurationVersion: 0.2.0
+  assertions:
+    - resource: Microsoft.Windows.Developer/OSVersion
+      directives:
+        description: Verify Windows 11 (22H2 or newer)
+        allowPrerelease: true
+      settings:
+        MinVersion: "10.0.22621"
+
+  resources:
+    # --------------------------------------------------------------------------
+    # 1. Windows Developer OS Baseline Settings
+    # --------------------------------------------------------------------------
+    - resource: Microsoft.Windows.Developer/DeveloperMode
+      id: EnableDeveloperMode
+      directives:
+        description: Enable Windows Developer Mode (allows non-admin symlinks for dotfiles)
+        allowPrerelease: true
+      settings:
+        Ensure: Present
+
+    - resource: Microsoft.Windows.Developer/FileExplorer
+      id: ConfigureFileExplorer
+      directives:
+        description: Show file extensions and hidden files in Windows Explorer
+        allowPrerelease: true
+      settings:
+        FileExtensions: Show
+        HiddenFiles: Show
+
+    # --------------------------------------------------------------------------
+    # 2. Core System Shells, Terminals & Editors
+    # --------------------------------------------------------------------------
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Git
+      directives:
+        description: Install Git for Windows
+      settings:
+        id: Git.Git
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: PowerShell7
+      directives:
+        description: Install PowerShell 7
+      settings:
+        id: Microsoft.PowerShell
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: WindowsTerminal
+      directives:
+        description: Install Microsoft Windows Terminal
+      settings:
+        id: Microsoft.WindowsTerminal
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: WezTerm
+      directives:
+        description: Install WezTerm GPU-accelerated Terminal Emulator
+      settings:
+        id: wez.wezterm
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: VSCode
+      directives:
+        description: Install Microsoft Visual Studio Code
+      settings:
+        id: Microsoft.VisualStudioCode
+        source: winget

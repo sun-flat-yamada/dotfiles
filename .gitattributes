@@ -1,0 +1,81 @@
+# ==============================================================================
+# Git Attributes - Line Endings & Language Identification
+# ==============================================================================
+
+# Auto-detect text files and normalize line endings to LF on checkout/commit
+* text=auto eol=lf
+
+# Explicit Text Formats
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.winget text eol=lf
+*.toml text eol=lf
+*.lua text eol=lf
+*.conf text eol=lf
+*.rules text eol=lf
+*.xml text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+
+# Dotfiles & Shell Scripts (Strictly LF so WSL2/Linux/macOS never fail on \r)
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+.zshrc text eol=lf
+.bashrc text eol=lf
+.aliases text eol=lf
+.gitconfig text eol=lf
+.gitconfig.* text eol=lf
+.gitignore text eol=lf
+.gitignore_global text eol=lf
+.gitattributes text eol=lf
+.gitattributes_global text eol=lf
+.wslconfig text eol=lf
+.editorconfig text eol=lf
+.cursorrules text eol=lf
+Brewfile text eol=lf
+Makefile text eol=lf
+.githooks/* text eol=lf
+
+# Source Code
+*.py text diff=python eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.dart text eol=lf
+*.go text eol=lf
+*.rs text diff=rust eol=lf
+*.c text diff=cpp eol=lf
+*.h text diff=cpp eol=lf
+*.cpp text diff=cpp eol=lf
+*.hpp text diff=cpp eol=lf
+*.cs text diff=csharp eol=lf
+
+# Windows Scripts
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.vbs text eol=crlf
+*.reg text eol=crlf
+*.sln text eol=crlf
+
+# Binary Files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.so binary
+*.dll binary
+*.dylib binary
+*.exe binary
+*.bin binary
+*.zip binary
+*.tar.gz binary

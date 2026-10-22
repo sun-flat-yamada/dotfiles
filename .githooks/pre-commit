@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# .githooks/pre-commit
+# ==============================================================================
+# Checks for:
+# 1. Staged sensitive files (private keys, credentials, local overrides)
+# 2. Secret patterns in staged diffs
+# 3. File naming conventions, dotfiles manifest/syntax/portability, and front-matter
+# ==============================================================================
+
+set -e
+
+echo "[Hook] Running pre-commit safety checks..."
+
+# 1. Check for staged sensitive files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+for FILE in $STAGED_FILES; do
+    case "$FILE" in
+        *.pem|*.key|id_rsa*|id_ed25519*|id_ecdsa*|*.pfx|*.p12|*.kdbx|service_account*.json|service-account*.json|*credentials.json|*.codex/auth.json|*.gemini/oauth_creds.json)
+            echo "❌ [ERROR] Attempting to commit cryptographic or credential file: $FILE" >&2
+            exit 1
+            ;;
+        .env|.env.local|.env.production|.gitconfig.local|.powershell.local.ps1|.zshrc.local|.bashrc.local|.secrets)
+            echo "❌ [ERROR] Attempting to commit local environment/override file: $FILE" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# 2. Check for secret patterns in staged content
+if git diff --cached | grep -E -q '((AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[0-9a-zA-Z_]{36,}|github_pat_[0-9a-zA-Z_]{22,}|sk-ant-[0-9a-zA-Z_-]{20,}|sk-(proj-|svcacct-)?[0-9a-zA-Z_-]{32,}|AIza[0-9A-Za-z_-]{35}|-----BEGIN (RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY)'; then
+    echo "❌ [ERROR] Potential plain-text API token or private key detected in staged diff!" >&2
+    echo "Review your staged changes with: git diff --cached" >&2
+    exit 1
+fi
+
+# 3. Validate file naming conventions, dotfiles manifest/configs, and front-matter
+PYTHON_BIN=""
+if command -v python3 >/dev/null 2>&1 && python3 -c "import sys" >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1 && python -c "import sys" >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+fi
+
+if [ -n "$PYTHON_BIN" ]; then
+    "$PYTHON_BIN" scripts/validate-filenames.py --staged
+    "$PYTHON_BIN" scripts/dotfiles.py validate
+    if "$PYTHON_BIN" -c "import yaml" >/dev/null 2>&1; then
+        "$PYTHON_BIN" scripts/validate-frontmatter.py
+    fi
+else
+    echo "⚠️ [WARN] Python interpreter not found; skipping Python-based pre-commit validators." >&2
+fi
+
+echo "✅ [Hook] Pre-commit safety checks passed."
+exit 0

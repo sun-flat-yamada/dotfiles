@@ -1,0 +1,58 @@
+# ==============================================================================
+# Global Git Ignore (~/.gitignore_global)
+# Protects all repositories from OS noise, editor backups, and AI session state
+# ==============================================================================
+
+# --- Operating System Artifacts ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Editor & IDE Temporary Files ---
+*~
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+# --- Secrets & Local Overrides (Defense-in-Depth) ---
+.env.local
+.env.*.local
+*.pem
+*.key
+*.pfx
+*.p12
+*.kdbx
+.secrets
+.gitconfig.local
+.powershell.local.ps1
+.zshrc.local
+.bashrc.local
+.dotfiles-backup/
+
+# --- AI Coding Agent Ephemeral / Machine-Local State ---
+.claude/settings.local.json
+.claude/history.jsonl
+.claude/.credentials.json
+.claude.json
+.claude.json.backup
+.codex/auth.json
+.codex/history.jsonl
+.gemini/oauth_creds.json
+.gemini/google_accounts.json
+.gemini/history/
+.aitk/

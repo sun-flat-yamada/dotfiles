@@ -1,0 +1,18 @@
+# ==============================================================================
+# mise Global Configuration (~/.config/mise/config.toml)
+# Unified polyglot language runtime manager (2026 Standard)
+# Layering Policy:
+#   - mise manages language runtimes (Node.js, Python, Go, uv).
+#   - OS CLI utilities (rg, fd, bat, eza, fzf, starship) are managed via Scoop / Brew.
+# Apply with: mise install
+# ==============================================================================
+
+[tools]
+node = "lts"
+python = "3.12"
+go = "1.25"
+uv = "latest"
+
+[settings]
+experimental = false
+idiomatic_version_file_enable_tools = ["node", "python", "go"]

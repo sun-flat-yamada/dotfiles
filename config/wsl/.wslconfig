@@ -1,0 +1,30 @@
+# ==============================================================================
+# WSL2 Host Configuration (~/.wslconfig)
+# Placed in %USERPROFILE%\.wslconfig on the Windows 11 host.
+# ==============================================================================
+
+[wsl2]
+# Mirrored networking mode (Windows 11 23H2+ / 2026 standard):
+# Unifies localhost, VPN compatibility, and LAN reachability between Windows & WSL2
+networkingMode=mirrored
+dnsTunneling=true
+autoProxy=true
+firewall=true
+
+# Enable GUI application support (WSLg)
+guiApplications=true
+
+# Optional hardware resource caps (uncomment to tune for your workstation)
+# memory=16GB
+# processors=8
+# swap=4GB
+
+[experimental]
+# Immediately reclaim unused Linux page cache memory back to the Windows host
+autoMemoryReclaim=dropcache
+
+# Automatically shrink the WSL2 virtual hard disk (.vhdx) as files are deleted
+sparseVhd=true
+
+# Allow Windows localhost ports to be reached from inside WSL2 even if bound to 127.0.0.1
+hostAddressLoopback=true

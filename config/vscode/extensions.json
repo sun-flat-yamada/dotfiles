@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "github.copilot",
+    "github.copilot-chat",
+    "anthropic.claude-code",
+    "sun-flat-yamada.vscode-markdown-comment",
+    "editorconfig.editorconfig",
+    "eamodio.gitlens",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "ms-vscode.powershell",
+    "sumneko.lua",
+    "tamasfe.even-better-toml",
+    "redhat.vscode-yaml",
+    "bierner.markdown-mermaid",
+    "marp-team.marp-vscode"
+  ]
+}

@@ -1,0 +1,20 @@
+# ==============================================================================
+# GitHub CODEOWNERS
+# ==============================================================================
+# Global default owner
+* @sun-flat-yamada
+
+# Critical Security & Governance Files
+/SECURITY.md @sun-flat-yamada
+/.github/workflows/ @sun-flat-yamada
+/.agents/ @sun-flat-yamada
+/docs/adr/ @sun-flat-yamada
+
+# AI Agent Permission Configuration (see .agents/rules/permission-rules-general.md)
+/CLAUDE.md @sun-flat-yamada
+/.claude/ @sun-flat-yamada
+/.codex/ @sun-flat-yamada
+/.cursor/ @sun-flat-yamada
+/.cursorrules @sun-flat-yamada
+/.gemini/ @sun-flat-yamada
+/.vscode/ @sun-flat-yamada

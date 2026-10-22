@@ -1,0 +1,100 @@
+# ==============================================================================
+# Global Git Configuration (~/.gitconfig)
+# Author: Youhei Yamada (@sun-flat-yamada)
+# Standard: 2026 Modern Git Best Practices (Cross-Platform Safe)
+# ==============================================================================
+
+[user]
+	name = Youhei Yamada
+	email = 51235130+sun-flat-yamada@users.noreply.github.com
+
+[core]
+	editor = code --wait
+	autocrlf = false
+	excludesfile = ~/.gitignore_global
+	attributesfile = ~/.gitattributes_global
+	# Note: Built-in fsmonitor daemon is only supported on Windows/macOS (incompatible with Linux/WSL2).
+	# Enable per-repo or in ~/.gitconfig.local on Windows/macOS when working on massive monorepos.
+	untrackedCache = true
+	quotepath = false
+	longpaths = true
+
+[init]
+	defaultBranch = main
+
+[column]
+	ui = auto
+
+[branch]
+	sort = -committerdate
+
+[tag]
+	sort = version:refname
+
+[diff]
+	algorithm = histogram
+	colorMoved = default
+	mnemonicPrefix = true
+	renames = true
+	tool = vscode
+
+[difftool "vscode"]
+	cmd = code --wait --diff $LOCAL $REMOTE
+
+[merge]
+	tool = vscode
+	conflictStyle = zdiff3
+
+[mergetool "vscode"]
+	cmd = code --wait --merge $REMOTE $LOCAL $BASE $MERGED
+	trustExitCode = true
+
+[delta]
+	navigate = true
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = TwoDark
+
+[pull]
+	rebase = true
+
+[push]
+	default = simple
+	autoSetupRemote = true
+	followTags = true
+
+[fetch]
+	prune = true
+	pruneTags = true
+	all = true
+
+[rebase]
+	autoSquash = true
+	autoStash = true
+	updateRefs = true
+
+[rerere]
+	enabled = true
+	autoupdate = true
+
+[help]
+	autocorrect = prompt
+
+[commit]
+	verbose = true
+
+[alias]
+	st = status -sb
+	lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+	last = log -1 HEAD --stat
+	unstage = restore --staged
+	amend = commit --amend --no-edit
+	wt = worktree
+	branches = branch -a --sort=-committerdate
+	tags = tag -l --sort=-version:refname
+	whoami = "!git config user.name && git config user.email"
+	clean-merged = "!f() { git branch --format='%(refname:short)' --merged | grep -vE '^(main|master|develop)$' | while IFS= read -r b; do [ -n \"$b\" ] && git branch -d \"$b\"; done; }; f"
+
+# Machine-local or work-specific overrides (never committed to git)
+[include]
+	path = ~/.gitconfig.local

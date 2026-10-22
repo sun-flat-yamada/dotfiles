@@ -1,0 +1,29 @@
+# ==============================================================================
+# OpenAI Codex CLI Global Configuration (~/.codex/config.toml)
+# ==============================================================================
+
+approval_policy = "on-request"
+approvals_reviewer = "user"
+sandbox_mode = "workspace-write"
+web_search = "cached"
+project_doc_fallback_filenames = ["AGENTS.md", "CLAUDE.md", ".gemini/GEMINI.md"]
+
+[sandbox_workspace_write]
+network_access = false
+writable_roots = []
+
+[shell_environment_policy]
+inherit = "core"
+exclude = [
+  "AWS_*",
+  "AZURE_*",
+  "GCP_*",
+  "GOOGLE_APPLICATION_CREDENTIALS",
+  "*_KEY",
+  "*_SECRET",
+  "*_TOKEN",
+  "*_PASSWORD",
+  "*_CREDENTIAL*",
+  "*_PAT",
+  "DATABASE_URL"
+]

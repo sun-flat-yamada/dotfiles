@@ -1,0 +1,42 @@
+# ==============================================================================
+# Global Git Attributes (~/.gitattributes_global)
+# ==============================================================================
+
+* text=auto eol=lf
+
+# Windows scripts require CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# POSIX scripts & dotfiles require LF
+*.sh text eol=lf
+*.zsh text eol=lf
+*.bash text eol=lf
+.zshrc text eol=lf
+.bashrc text eol=lf
+.aliases text eol=lf
+*.lua text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.winget text eol=lf
+*.conf text eol=lf
+Brewfile text eol=lf
+Makefile text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.gz binary
+*.7z binary

@@ -1,0 +1,114 @@
+{
+  "buckets": [
+    {
+      "Name": "main",
+      "Source": "https://github.com/ScoopInstaller/Main"
+    },
+    {
+      "Name": "extras",
+      "Source": "https://github.com/ScoopInstaller/Extras"
+    },
+    {
+      "Name": "java",
+      "Source": "https://github.com/ScoopInstaller/Java"
+    },
+    {
+      "Name": "versions",
+      "Source": "https://github.com/ScoopInstaller/Versions"
+    },
+    {
+      "Name": "nerd-fonts",
+      "Source": "https://github.com/matthewjberger/scoop-nerd-fonts"
+    }
+  ],
+  "apps": [
+    {
+      "Name": "7zip",
+      "Source": "main"
+    },
+    {
+      "Name": "dark",
+      "Source": "main"
+    },
+    {
+      "Name": "doxygen",
+      "Source": "main"
+    },
+    {
+      "Name": "gh",
+      "Source": "main"
+    },
+    {
+      "Name": "graphviz",
+      "Source": "main"
+    },
+    {
+      "Name": "openjdk",
+      "Source": "java"
+    },
+    {
+      "Name": "starship",
+      "Source": "main"
+    },
+    {
+      "Name": "zoxide",
+      "Source": "main"
+    },
+    {
+      "Name": "ripgrep",
+      "Source": "main"
+    },
+    {
+      "Name": "fd",
+      "Source": "main"
+    },
+    {
+      "Name": "bat",
+      "Source": "main"
+    },
+    {
+      "Name": "eza",
+      "Source": "main"
+    },
+    {
+      "Name": "fzf",
+      "Source": "main"
+    },
+    {
+      "Name": "delta",
+      "Source": "main"
+    },
+    {
+      "Name": "lazygit",
+      "Source": "extras"
+    },
+    {
+      "Name": "jq",
+      "Source": "main"
+    },
+    {
+      "Name": "yq",
+      "Source": "main"
+    },
+    {
+      "Name": "gitleaks",
+      "Source": "main"
+    },
+    {
+      "Name": "uv",
+      "Source": "main"
+    },
+    {
+      "Name": "mise",
+      "Source": "main"
+    },
+    {
+      "Name": "Hack-NF",
+      "Source": "nerd-fonts"
+    },
+    {
+      "Name": "HackGen-NF",
+      "Source": "nerd-fonts"
+    }
+  ]
+}

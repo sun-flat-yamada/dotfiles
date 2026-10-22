@@ -1,0 +1,10 @@
+# Cursor Rules for dotfiles
+
+- Adhere to Clean Architecture and isolation principles outlined in `docs/architecture/overview.md`.
+- Never commit or print real secrets, private keys, or credentials.
+- Commit messages must follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`).
+- Always include automated unit tests alongside code changes.
+- Refer to `.agents/rules/coding-rules-general.md` and `.agents/rules/languages/coding-rules-python.md`.
+- File naming must strictly follow `.agents/rules/naming-rules-general.md` (agent definitions must end with `*.agent.md`, prefix `agent-` is strictly prohibited).
+- Follow the permission tiers in `.agents/rules/permission-rules-general.md` (A: always allow, C: conditional, N: never); `.cursor/cli.json` and `.cursor/permissions.json` enforce them.
+- **Output Language**: Reply to the user and write PR titles/descriptions in Japanese; commit messages, code, identifiers, and comments stay in English. Details: `.agents/rules/git-rules-commit.md`.

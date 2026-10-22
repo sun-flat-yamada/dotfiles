@@ -1,0 +1,33 @@
+{
+  "env": {},
+  "enableWorkflows": true,
+  "enableAllProjectMcpServers": false,
+  "language": "japanese",
+  "autoUpdatesChannel": "latest",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "theme": "dark",
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.codex/auth.json)",
+      "Read(~/.gemini/oauth_creds.json)",
+      "Read(~/.gitconfig.local)",
+      "Read(~/.powershell.local.ps1)",
+      "Read(~/.zshrc.local)",
+      "Read(~/.bashrc.local)",
+      "Read(~/.local/state/zsh_history)",
+      "Read(~/AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/**)"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "key": "shift+enter",
+    "command": "workbench.action.chat.submit",
+    "when": "inChatInput && chatInputHasText"
+  },
+  {
+    "key": "enter",
+    "command": "type",
+    "args": {
+      "text": "\n"
+    },
+    "when": "inChatInput"
+  },
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.new"
+  },
+  {
+    "key": "ctrl+alt+r",
+    "command": "workbench.action.reloadWindow"
+  }
+]

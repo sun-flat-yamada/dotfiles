@@ -1,0 +1,88 @@
+---
+title: "Contributing to dotfiles"
+description: "Guidelines and instructions for contributing to the project, covering branch management, commit conventions, and pull request workflows."
+category: "governance"
+type: "guidelines"
+status: "active"
+date: 2026-09-20
+updated: 2026-10-03
+lang: "en"
+tags:
+  - "contributing"
+  - "governance"
+  - "workflow"
+  - "git"
+---
+
+# Contributing to dotfiles
+
+Thank you for your interest in contributing to **dotfiles**!  
+We adhere to strict engineering standards, transparent architectural decision-making, and robust quality gates to ensure production stability.
+
+---
+
+## 🧭 Code of Conduct
+
+All contributors and participants are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
+
+## 🛠️ Development Workflow
+
+We follow a feature branch workflow paired with **Conventional Commits**:
+
+1. **Fork & Branch**:
+   - Fork `https://github.com/sun-flat-yamada/dotfiles` and create a dedicated branch:
+     ```bash
+     git checkout -b feat/my-enhancement
+     ```
+2. **Setup Environment & Hooks**:
+   - Install local Git hooks to ensure secret leaks and formatting issues are caught before committing:
+     ```bash
+     python scripts/install-hooks.py
+     ```
+3. **Develop with Test-Driven Development (TDD)**:
+   - Write tests that capture expected behavior before or alongside implementation.
+   - Adhere to the general coding principles in `.agents/rules/coding-rules-general.md` and specific language rules in `.agents/rules/languages/`.
+4. **Run Pre-Commit Verification**:
+   - Ensure zero unresolved placeholders, strict adherence to file naming rules and front-matter standards, and pass all tests and linter checks:
+     ```bash
+     python scripts/apply-template.py --check
+     python scripts/validate-filenames.py
+     python scripts/validate-frontmatter.py   # requires PyYAML
+     python tests/test-permission-guard.py
+     ```
+5. **Commit Message Conventions**:
+   - Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+     - `feat: add new telemetry provider`
+     - `fix: resolve race condition in cache eviction`
+     - `docs: update getting started guide`
+     - `refactor: streamline error handling logic`
+     - `test: add unit coverage for authentication handler`
+
+---
+
+## 🔚 Line Endings
+
+- Text files are stored with **LF** line endings (see `.gitattributes`); only Windows-specific files (`.ps1`, `.bat`, `.cmd`, `.psm1`, `.psd1`, `.vbs`, `.reg`, `.sln`) use CRLF.
+- On Windows, set `git config core.autocrlf false` (or `input`) and configure your editor to save LF, so that working-tree files do not drift to CRLF.
+- The `mixed-line-ending --fix=lf` pre-commit hook normalizes staged files; run `pre-commit run --all-files` to fix existing ones.
+
+---
+
+## 🤖 AI Coding & Assistant Guidelines
+
+When developing with AI assistants (Google Antigravity, Claude Code, GitHub Copilot, Gemini CLI, Cursor):
+- **Never bypass review**: AI-generated code must be reviewed and tested by a human before opening a PR.
+- **Context Hierarchy**: Always respect enterprise governance and repository rules (`.agents/rules/`) over prompt suggestions.
+- **Zero Secrets**: Do not allow AI tools to generate hardcoded mock keys, internal URLs, or real tokens.
+- **Permission Tiers**: Keep the shared AI permission configurations enabled and follow `.agents/rules/permission-rules-general.md`. Personal relaxations belong in untracked local files (for example `.claude/settings.local.json`), never in the shared configuration.
+
+---
+
+## 📬 Submitting a Pull Request
+
+1. Push your branch to your fork.
+2. Open a Pull Request against the `main` branch of `https://github.com/sun-flat-yamada/dotfiles`.
+3. Fill out all sections of the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+4. Verify that all automated GitHub Actions checks (CI, Gitleaks, Hygiene) pass.

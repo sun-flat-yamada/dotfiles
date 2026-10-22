@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.1.0",
+  "author": "Youhei Yamada (@sun-flat-yamada)",
+  "description": "Declarative cross-platform dotfiles manifest for Windows 11, WSL2 (Ubuntu), Linux, and macOS.",
+  "profiles": {
+    "core": ["git", "shell", "starship", "ai"],
+    "full": ["git", "wsl", "terminal", "shell", "starship", "editor", "ai", "packages"]
+  },
+  "items": [
+    {
+      "id": "git.config",
+      "profile": "git",
+      "description": "Global Git configuration (.gitconfig) with 2026 best practices (zdiff3, histogram, rerere, updateRefs)",
+      "source": "config/git/.gitconfig",
+      "targets": {
+        "windows": "~/.gitconfig",
+        "wsl": "~/.gitconfig",
+        "linux": "~/.gitconfig",
+        "macos": "~/.gitconfig"
+      }
+    },
+    {
+      "id": "git.ignore_global",
+      "profile": "git",
+      "description": "Global Git ignore rules (.gitignore_global) for OS, editor, and AI agent ephemeral artifacts",
+      "source": "config/git/.gitignore_global",
+      "targets": {
+        "windows": "~/.gitignore_global",
+        "wsl": "~/.gitignore_global",
+        "linux": "~/.gitignore_global",
+        "macos": "~/.gitignore_global"
+      }
+    },
+    {
+      "id": "git.attributes_global",
+      "profile": "git",
+      "description": "Global Git attributes (.gitattributes_global) for cross-platform line endings and diff drivers",
+      "source": "config/git/.gitattributes_global",
+      "targets": {
+        "windows": "~/.gitattributes_global",
+        "wsl": "~/.gitattributes_global",
+        "linux": "~/.gitattributes_global",
+        "macos": "~/.gitattributes_global"
+      }
+    },
+    {
+      "id": "wsl.host_config",
+      "profile": "wsl",
+      "description": "WSL2 host configuration (.wslconfig) with mirrored networking, dropcache memory reclaim, and sparseVhd",
+      "source": "config/wsl/.wslconfig",
+      "targets": {
+        "windows": "~/.wslconfig"
+      }
+    },
+    {
+      "id": "wezterm.config",
+      "profile": "terminal",
+      "description": "WezTerm primary configuration (wezterm.lua) with Dark 2026 theme, Nerd Font fallback, and WebGPU front-end",
+      "source": "config/wezterm/wezterm.lua",
+      "targets": {
+        "windows": "~/.config/wezterm/wezterm.lua",
+        "linux": "~/.config/wezterm/wezterm.lua",
+        "macos": "~/.config/wezterm/wezterm.lua"
+      }
+    },
+    {
+      "id": "wezterm.keybinds",
+      "profile": "terminal",
+      "description": "WezTerm modular keybindings (keybinds.lua) with multiplexer pane/tab navigation",
+      "source": "config/wezterm/keybinds.lua",
+      "targets": {
+        "windows": "~/.config/wezterm/keybinds.lua",
+        "linux": "~/.config/wezterm/keybinds.lua",
+        "macos": "~/.config/wezterm/keybinds.lua"
+      }
+    },
+    {
+      "id": "windows_terminal.fragment",
+      "profile": "terminal",
+      "description": "Windows Terminal Dark 2026 color scheme and profile defaults fragment",
+      "source": "config/windows-terminal/settings.fragment.json",
+      "targets": {
+        "windows": "~/AppData/Local/Microsoft/Windows Terminal/Fragments/sun-flat-yamada-dotfiles/settings.fragment.json"
+      }
+    },
+    {
+      "id": "powershell.profile_default",
+      "profile": "shell",
+      "description": "PowerShell 7 profile (Microsoft.PowerShell_profile.ps1) with <50ms lazy-loading and secret-safe history filter",
+      "source": "config/powershell/Microsoft.PowerShell_profile.ps1",
+      "targets": {
+        "windows": "~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1",
+        "linux": "~/.config/powershell/Microsoft.PowerShell_profile.ps1",
+        "macos": "~/.config/powershell/Microsoft.PowerShell_profile.ps1"
+      }
+    },
+    {
+      "id": "powershell.profile_vscode",
+      "profile": "shell",
+      "description": "PowerShell VS Code integrated terminal profile (Microsoft.VSCode_profile.ps1)",
+      "source": "config/powershell/Microsoft.PowerShell_profile.ps1",
+      "targets": {
+        "windows": "~/Documents/PowerShell/Microsoft.VSCode_profile.ps1"
+      }
+    },
+    {
+      "id": "shell.zshrc",
+      "profile": "shell",
+      "description": "Zsh configuration (.zshrc) for WSL2 (Ubuntu), Linux, and macOS with lazy-loaded tools and WSL clipboard bridge",
+      "source": "config/shell/.zshrc",
+      "targets": {
+        "wsl": "~/.zshrc",
+        "linux": "~/.zshrc",
+        "macos": "~/.zshrc"
+      }
+    },
+    {
+      "id": "shell.bashrc",
+      "profile": "shell",
+      "description": "Bash configuration (.bashrc) for WSL2 and Linux environments",
+      "source": "config/shell/.bashrc",
+      "targets": {
+        "wsl": "~/.bashrc",
+        "linux": "~/.bashrc",
+        "macos": "~/.bashrc"
+      }
+    },
+    {
+      "id": "shell.aliases",
+      "profile": "shell",
+      "description": "Shared POSIX shell aliases and helper functions (.aliases)",
+      "source": "config/shell/.aliases",
+      "targets": {
+        "wsl": "~/.aliases",
+        "linux": "~/.aliases",
+        "macos": "~/.aliases"
+      }
+    },
+    {
+      "id": "starship.config",
+      "profile": "starship",
+      "description": "Cross-shell Starship prompt configuration (starship.toml) with Dark 2026 palette",
+      "source": "config/starship/starship.toml",
+      "targets": {
+        "windows": "~/.config/starship.toml",
+        "wsl": "~/.config/starship.toml",
+        "linux": "~/.config/starship.toml",
+        "macos": "~/.config/starship.toml"
+      }
+    },
+    {
+      "id": "vscode.settings",
+      "profile": "editor",
+      "description": "VS Code user settings.json with Dark 2026 workbench customization, Japanese segmentation, and AI hook bindings",
+      "source": "config/vscode/settings.json",
+      "targets": {
+        "windows": "~/AppData/Roaming/Code/User/settings.json",
+        "linux": "~/.config/Code/User/settings.json",
+        "macos": "~/Library/Application Support/Code/User/settings.json"
+      }
+    },
+    {
+      "id": "vscode.keybindings",
+      "profile": "editor",
+      "description": "VS Code keybindings.json including Shift+Enter chat submit protection and terminal ergonomics",
+      "source": "config/vscode/keybindings.json",
+      "targets": {
+        "windows": "~/AppData/Roaming/Code/User/keybindings.json",
+        "linux": "~/.config/Code/User/keybindings.json",
+        "macos": "~/Library/Application Support/Code/User/keybindings.json"
+      }
+    },
+    {
+      "id": "ai.agents_global",
+      "profile": "ai",
+      "description": "Universal Multi-AI Agent instructions (~/.agents/AGENTS.md) — Single Source of Truth",
+      "source": "config/ai/agents/AGENTS.md",
+      "targets": {
+        "windows": "~/.agents/AGENTS.md",
+        "wsl": "~/.agents/AGENTS.md",
+        "linux": "~/.agents/AGENTS.md",
+        "macos": "~/.agents/AGENTS.md"
+      }
+    },
+    {
+      "id": "ai.claude_md",
+      "profile": "ai",
+      "description": "Claude Code global instructions (~/.claude/CLAUDE.md) enforcing Japanese communication and engineering rules",
+      "source": "config/ai/claude/CLAUDE.md",
+      "targets": {
+        "windows": "~/.claude/CLAUDE.md",
+        "wsl": "~/.claude/CLAUDE.md",
+        "linux": "~/.claude/CLAUDE.md",
+        "macos": "~/.claude/CLAUDE.md"
+      }
+    },
+    {
+      "id": "ai.claude_settings",
+      "profile": "ai",
+      "description": "Claude Code global settings (~/.claude/settings.json) with ccstatusline, Japanese mode, and Tier N deny guardrails",
+      "source": "config/ai/claude/settings.json",
+      "targets": {
+        "windows": "~/.claude/settings.json",
+        "wsl": "~/.claude/settings.json",
+        "linux": "~/.claude/settings.json",
+        "macos": "~/.claude/settings.json"
+      }
+    },
+    {
+      "id": "ai.ccstatusline",
+      "profile": "ai",
+      "description": "ccstatusline configuration (~/.config/ccstatusline/settings.json) for real-time Claude telemetry",
+      "source": "config/ai/ccstatusline/settings.json",
+      "targets": {
+        "windows": "~/.config/ccstatusline/settings.json",
+        "wsl": "~/.config/ccstatusline/settings.json",
+        "linux": "~/.config/ccstatusline/settings.json",
+        "macos": "~/.config/ccstatusline/settings.json"
+      }
+    },
+    {
+      "id": "ai.gemini_md",
+      "profile": "ai",
+      "description": "Gemini CLI & Google Antigravity global instructions (~/.gemini/GEMINI.md)",
+      "source": "config/ai/gemini/GEMINI.md",
+      "targets": {
+        "windows": "~/.gemini/GEMINI.md",
+        "wsl": "~/.gemini/GEMINI.md",
+        "linux": "~/.gemini/GEMINI.md",
+        "macos": "~/.gemini/GEMINI.md"
+      }
+    },
+    {
+      "id": "ai.gemini_settings",
+      "profile": "ai",
+      "description": "Gemini CLI global settings (~/.gemini/settings.json) with sandbox and disableYoloMode",
+      "source": "config/ai/gemini/settings.json",
+      "targets": {
+        "windows": "~/.gemini/settings.json",
+        "wsl": "~/.gemini/settings.json",
+        "linux": "~/.gemini/settings.json",
+        "macos": "~/.gemini/settings.json"
+      }
+    },
+    {
+      "id": "ai.gemini_policy",
+      "profile": "ai",
+      "description": "Gemini CLI global permission policy (~/.gemini/policies/permission-policy.toml) enforcing Tier A/C/N rules",
+      "source": ".gemini/policies/permission-policy.toml",
+      "targets": {
+        "windows": "~/.gemini/policies/permission-policy.toml",
+        "wsl": "~/.gemini/policies/permission-policy.toml",
+        "linux": "~/.gemini/policies/permission-policy.toml",
+        "macos": "~/.gemini/policies/permission-policy.toml"
+      }
+    },
+    {
+      "id": "ai.codex_config",
+      "profile": "ai",
+      "description": "OpenAI Codex CLI global configuration (~/.codex/config.toml) with sandbox and secret environment exclusion",
+      "source": "config/ai/codex/config.toml",
+      "targets": {
+        "windows": "~/.codex/config.toml",
+        "wsl": "~/.codex/config.toml",
+        "linux": "~/.codex/config.toml",
+        "macos": "~/.codex/config.toml"
+      }
+    },
+    {
+      "id": "packages.mise",
+      "profile": "packages",
+      "description": "mise global runtime manifest (~/.config/mise/config.toml)",
+      "source": "packages/mise/config.toml",
+      "targets": {
+        "windows": "~/.config/mise/config.toml",
+        "wsl": "~/.config/mise/config.toml",
+        "linux": "~/.config/mise/config.toml",
+        "macos": "~/.config/mise/config.toml"
+      }
+    }
+  ]
+}

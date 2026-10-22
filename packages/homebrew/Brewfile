@@ -1,0 +1,22 @@
+# ==============================================================================
+# Homebrew Bundle (Brewfile) for WSL2 (Ubuntu) / Linux / macOS
+# Apply with: brew bundle --file=packages/homebrew/Brewfile
+# ==============================================================================
+
+brew "git"
+brew "gh"
+brew "mise"
+brew "uv"
+brew "starship"
+brew "zoxide"
+brew "ripgrep"
+brew "fd"
+brew "bat"
+brew "eza"
+brew "fzf"
+brew "git-delta"
+brew "lazygit"
+brew "jq"
+brew "yq"
+brew "gitleaks"
+brew "shellcheck"

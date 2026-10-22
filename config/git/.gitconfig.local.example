@@ -1,0 +1,24 @@
+# ==============================================================================
+# Local Git Configuration Override Template (~/.gitconfig.local)
+# Copy this file to ~/.gitconfig.local to configure machine-specific settings,
+# SSH commit signing, Windows/macOS fsmonitor, delta pager, or work identity.
+# ==============================================================================
+
+# [core]
+# 	fsmonitor = true
+# 	pager = delta
+#
+# [interactive]
+# 	diffFilter = delta --color-only
+#
+# [user]
+# 	signingkey = ~/.ssh/id_ed25519.pub
+#
+# [gpg]
+# 	format = ssh
+#
+# [commit]
+# 	gpgsign = true
+#
+# [includeIf "gitdir:~/work/"]
+# 	path = ~/.gitconfig.work

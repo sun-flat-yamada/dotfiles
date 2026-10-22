@@ -1,0 +1,15 @@
+{
+  "context": {
+    "fileName": [
+      "GEMINI.md",
+      "CLAUDE.md",
+      "AGENTS.md"
+    ]
+  },
+  "security": {
+    "disableYoloMode": true
+  },
+  "tools": {
+    "sandbox": true
+  }
+}
