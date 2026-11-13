@@ -318,9 +318,179 @@ prefix_rule(
     justification = "N-09: reverse tunnels are never allowed.",
 )
 
+prefix_rule(
+    pattern = [["runas", "gsudo"]],
+    decision = "forbidden",
+    justification = "N-03: privilege escalation is never allowed. Ask a human to run it.",
+    match = ["runas /user:Administrator cmd", "gsudo winget upgrade"],
+)
+
+prefix_rule(
+    pattern = ["schtasks", ["/create", "/Create"]],
+    decision = "forbidden",
+    justification = "N-03: installing persistence on the host is never allowed.",
+    match = ["schtasks /create /tn updater /tr payload.exe"],
+    not_match = ["schtasks /query"],
+)
+
+prefix_rule(
+    pattern = [["powershell", "pwsh", "powershell.exe", "pwsh.exe"], ["-EncodedCommand", "-encodedcommand", "-enc", "-ec", "-e"]],
+    decision = "forbidden",
+    justification = "N-06: encoded PowerShell commands hide what runs and are never allowed.",
+    match = ["powershell -EncodedCommand aGk=", "pwsh -enc aGk="],
+    not_match = ["pwsh -File install.ps1"],
+)
+
+prefix_rule(
+    pattern = ["git", ["clone", "fetch", "pull", "ls-remote"], ["ext::sh", "ext::bash", "ext::ssh"]],
+    decision = "forbidden",
+    justification = "N-06: the git ext:: transport executes arbitrary commands.",
+    match = ["git clone ext::sh -c id"],
+    not_match = ["git clone https://github.com/org/repo.git"],
+)
+
+prefix_rule(
+    pattern = [["cat", "less", "more", "head", "tail", "cp", "base64", "xxd"], ["~/.claude.json", "~/.claude/.credentials.json", "~/.codex/auth.json", "~/.gemini/oauth_creds.json", "~/.config/github-copilot/apps.json", "~/.config/github-copilot/hosts.json", "~/.vault-token"]],
+    decision = "forbidden",
+    justification = "N-01: AI tool and vault credentials are never read.",
+    match = ["cat ~/.claude.json", "cp ~/.codex/auth.json /tmp/a"],
+    not_match = ["cat README.md"],
+)
+
+prefix_rule(
+    pattern = ["op", ["read", "inject", "run"]],
+    decision = "forbidden",
+    justification = "N-01: reading secrets from a password manager is never allowed.",
+    match = ["op read op://vault/item/password"],
+    not_match = ["op --version"],
+)
+
+prefix_rule(
+    pattern = ["vault", ["read", "kv"]],
+    decision = "forbidden",
+    justification = "N-01: reading secrets from a secret manager is never allowed.",
+    match = ["vault kv get secret/app", "vault read secret/app"],
+    not_match = ["vault status"],
+)
+
+prefix_rule(
+    pattern = ["pass", "show"],
+    decision = "forbidden",
+    justification = "N-01: reading secrets from a password manager is never allowed.",
+    match = ["pass show github"],
+)
+
+prefix_rule(
+    pattern = ["security", ["find-generic-password", "find-internet-password", "dump-keychain"]],
+    decision = "forbidden",
+    justification = "N-01: reading the macOS keychain is never allowed.",
+    match = ["security find-generic-password -s app -w"],
+    not_match = ["security list-keychains"],
+)
+
+prefix_rule(
+    pattern = ["git", "credential", "fill"],
+    decision = "forbidden",
+    justification = "N-01: printing stored git credentials is never allowed.",
+    match = ["git credential fill"],
+)
+
+prefix_rule(
+    pattern = ["aws", "ecr", "get-login-password"],
+    decision = "forbidden",
+    justification = "N-01: printing registry tokens is never allowed.",
+    match = ["aws ecr get-login-password --region us-east-1"],
+)
+
+prefix_rule(
+    pattern = ["gh", "auth", ["login", "refresh"]],
+    decision = "forbidden",
+    justification = "N-08: widening the agent's own GitHub access is never allowed. Ask a human.",
+    match = ["gh auth refresh -s admin:org"],
+    not_match = ["gh auth status"],
+)
+
+prefix_rule(
+    pattern = ["gh", ["ssh-key", "gpg-key"], "add"],
+    decision = "forbidden",
+    justification = "N-08: adding keys to the account is never allowed.",
+    match = ["gh ssh-key add key.pub"],
+    not_match = ["gh ssh-key list"],
+)
+
+prefix_rule(
+    pattern = ["history", ["-c", "-w", "-d"]],
+    decision = "forbidden",
+    justification = "N-12: erasing shell history is never allowed.",
+    match = ["history -c"],
+    not_match = ["history 20"],
+)
+
+prefix_rule(
+    pattern = ["unset", "HISTFILE"],
+    decision = "forbidden",
+    justification = "N-12: disabling shell history is never allowed.",
+    match = ["unset HISTFILE"],
+)
+
+prefix_rule(
+    pattern = [["rm", "shred", "truncate", "unlink"], ["-rf", "-fr", "-r", "-f", "-s"], ["~/.claude/projects", "~/.codex/sessions", "~/.codex/history.jsonl", "~/.claude/history.jsonl", "~/.gemini/tmp", "/var/log"]],
+    decision = "forbidden",
+    justification = "N-12: deleting session transcripts, logs, or history is never allowed.",
+    match = ["rm -rf ~/.claude/projects", "rm -rf ~/.codex/sessions"],
+    not_match = ["rm -rf build"],
+)
+
+prefix_rule(
+    pattern = [["diskpart", "vssadmin", "wbadmin", "bcdedit"]],
+    decision = "forbidden",
+    justification = "N-05: disk, backup, and boot tools are never allowed.",
+    match = ["vssadmin delete shadows /all", "diskpart /s script.txt"],
+)
+
 # ------------------------------------------------------------------------------
 # Tier C-HITL — human approval for every invocation
 # ------------------------------------------------------------------------------
+prefix_rule(
+    pattern = [["claude", "gemini", "codex", "copilot", "cursor-agent", "qwen", "goose", "opencode", "aider"]],
+    decision = "prompt",
+    justification = "C-HITL-09: a nested agent session loads its own settings and hooks and needs approval. MCP, plugin, and extension installs are C-HITL-07.",
+    match = ["claude -p summarize", "codex exec task", "gemini -p hi", "claude mcp add tools"],
+    not_match = ["clang -v"],
+)
+
+prefix_rule(
+    pattern = [["code", "code-insiders", "codium", "cursor", "windsurf"], "--install-extension"],
+    decision = "prompt",
+    justification = "C-HITL-07: installing an editor extension needs approval.",
+    match = ["code --install-extension publisher.extension"],
+    not_match = ["code --list-extensions"],
+)
+
+prefix_rule(
+    pattern = ["git", ["-c", "--config-env"]],
+    decision = "prompt",
+    justification = "C-HITL-10: one-off git configuration can make git run a program (core.fsmonitor, core.sshCommand, diff.external).",
+    match = ["git -c core.fsmonitor=./x.sh status", "git -c core.sshCommand=./x.sh fetch"],
+    not_match = ["git status"],
+)
+
+prefix_rule(
+    pattern = ["git", "config", ["core.fsmonitor", "core.sshCommand", "core.sshcommand", "core.pager", "core.editor", "diff.external", "credential.helper", "core.gitProxy", "core.askPass"]],
+    decision = "prompt",
+    justification = "C-HITL-10: this git configuration key makes git run a program.",
+    match = ["git config core.fsmonitor ./monitor.sh", "git config credential.helper store"],
+    not_match = ["git config user.name dev"],
+)
+
+prefix_rule(
+    pattern = ["git", "reflog", ["expire", "delete"]],
+    decision = "prompt",
+    justification = "C-HITL-03: expiring the reflog removes the way back from a bad reset.",
+    match = ["git reflog expire --expire=now --all"],
+    not_match = ["git reflog"],
+)
+
 prefix_rule(
     pattern = ["git", ["push", "clone", "filter-branch", "filter-repo"]],
     decision = "prompt",
