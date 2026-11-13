@@ -74,7 +74,7 @@ denyMessage = "N-05: deleting root, home, or workspace paths is never allowed."
 
 [[rule]]
 toolName = "run_shell_command"
-commandPrefix = ["mkfs", "mkfs.ext4", "mkfs.xfs", "mkfs.vfat", "fdisk", "sfdisk", "parted", "wipefs", "shutdown", "reboot", "halt", "poweroff"]
+commandPrefix = ["mkfs", "mkfs.ext4", "mkfs.xfs", "mkfs.vfat", "fdisk", "sfdisk", "parted", "wipefs", "shutdown", "reboot", "halt", "poweroff", "diskpart", "vssadmin", "wbadmin", "bcdedit", "Format-Volume", "Clear-Disk", "Stop-Computer", "Restart-Computer"]
 decision = "deny"
 priority = 900
 denyMessage = "N-05: irreversible disk and power operations are never allowed."
@@ -116,14 +116,14 @@ denyMessage = "N-01: reading or writing .env files is never allowed. Use .env.ex
 
 [[rule]]
 toolName = "run_shell_command"
-commandRegex = '.*(\.ssh\b|\bid_(rsa|ed25519|ecdsa|dsa)\b|\.aws/|\.azure/|\.config/gcloud|\.kube/config|\.docker/config\.json|\.git-credentials|\.netrc|\.npmrc|\.pypirc|\.gem/credentials|\.cargo/credentials(\.toml|)|\.config/gh/|\.gnupg/|\.claude/\.credentials\.json|\.codex/auth\.json|\.gemini/oauth_creds\.json|(credentials|client_secret[^/\s"]*|service[-_]account[^/\s"]*)\.json|\.(bash_|zsh_|sh_|)history|ConsoleHost_history\.txt|\.(gitconfig|zshrc|bashrc)\.local\b|\.powershell\.local\.ps1|\.secrets\b|\.tfstate|/proc/[^/\s]+/environ|\.(pem|key|p12|pfx|jks|keystore|kdbx)\b)'
+commandRegex = '.*(\.ssh\b|\bid_(rsa|ed25519|ecdsa|dsa)\b|\.aws/|\.azure/|\.config/gcloud|\.kube/config|\.docker/config\.json|\.git-credentials|\.netrc|\.npmrc|\.pypirc|\.gem/credentials|\.cargo/credentials(\.toml|)|\.config/gh/|\.gnupg/|\.claude/\.credentials\.json|\.codex/auth\.json|\.gemini/oauth_creds\.json|\.claude\.json|\.(claude|codex)/history\.jsonl|\.config/github-copilot|\.vault-token|(credentials|client_secret[^/\s"]*|service[-_]account[^/\s"]*)\.json|\.(bash_|zsh_|sh_|)history|ConsoleHost_history\.txt|\.(gitconfig|zshrc|bashrc)\.local\b|\.powershell\.local\.ps1|\.secrets\b|\.tfstate|/proc/[^/\s]+/environ|\.(pem|key|p12|pfx|jks|keystore|kdbx)\b)'
 decision = "deny"
 priority = 900
 denyMessage = "N-01: accessing credential files is never allowed."
 
 [[rule]]
 toolName = "run_shell_command"
-commandPrefix = ["gh auth token", "gcloud auth print-access-token", "gcloud auth print-identity-token", "aws secretsmanager get-secret-value", "aws configure get", "aws configure export-credentials", "kubectl get secret", "kubectl get secrets", "az account get-access-token", "az keyvault secret show"]
+commandPrefix = ["op read", "op item get", "op inject", "vault kv get", "vault read", "pass show", "security find-generic-password", "security find-internet-password", "security dump-keychain", "git credential fill", "aws ecr get-login-password", "kubectl config view --raw", "gh auth token", "gcloud auth print-access-token", "gcloud auth print-identity-token", "aws secretsmanager get-secret-value", "aws configure get", "aws configure export-credentials", "kubectl get secret", "kubectl get secrets", "az account get-access-token", "az keyvault secret show"]
 decision = "deny"
 priority = 900
 denyMessage = "N-01: printing tokens or reading secret stores is never allowed."
@@ -137,7 +137,7 @@ denyMessage = "N-01: reading or writing .env files is never allowed."
 
 [[rule]]
 toolName = ["read_file", "write_file", "replace"]
-argsPattern = '"file_path":"[^"]*(\.ssh/|id_(rsa|ed25519|ecdsa|dsa)"|\.aws/|\.azure/|\.config/gcloud/|\.kube/|\.docker/config\.json|\.git-credentials|\.netrc|\.npmrc|\.pypirc|\.gem/credentials|\.cargo/credentials(\.toml|)|\.config/gh/|\.gnupg/|\.claude/\.credentials\.json|\.codex/auth\.json|\.gemini/oauth_creds\.json|(credentials|client_secret[^"]*|service[-_]account[^"]*)\.json|\.(bash_|zsh_|sh_|)history|ConsoleHost_history\.txt|\.(gitconfig|zshrc|bashrc)\.local"|\.powershell\.local\.ps1"|\.secrets"|\.tfstate|\.(pem|key|p12|pfx|jks|keystore|kdbx)")'
+argsPattern = '"file_path":"[^"]*(\.ssh/|id_(rsa|ed25519|ecdsa|dsa)"|\.aws/|\.azure/|\.config/gcloud/|\.kube/|\.docker/config\.json|\.git-credentials|\.netrc|\.npmrc|\.pypirc|\.gem/credentials|\.cargo/credentials(\.toml|)|\.config/gh/|\.gnupg/|\.claude/\.credentials\.json|\.codex/auth\.json|\.gemini/oauth_creds\.json|\.claude\.json|\.(claude|codex)/history\.jsonl|\.config/github-copilot|\.vault-token|(credentials|client_secret[^"]*|service[-_]account[^"]*)\.json|\.(bash_|zsh_|sh_|)history|ConsoleHost_history\.txt|\.(gitconfig|zshrc|bashrc)\.local"|\.powershell\.local\.ps1"|\.secrets"|\.tfstate|\.(pem|key|p12|pfx|jks|keystore|kdbx)")'
 decision = "deny"
 priority = 900
 denyMessage = "N-01: accessing credential files is never allowed."
@@ -158,10 +158,10 @@ denyMessage = "N-10: publishing packages through a runner is still done by CI, n
 
 [[rule]]
 toolName = "run_shell_command"
-commandPrefix = ["gh pr merge"]
+commandPrefix = ["gh pr merge", "gh auth login", "gh auth refresh", "gh ssh-key add", "gh gpg-key add", "gh repo deploy-key add"]
 decision = "deny"
 priority = 900
-denyMessage = "N-08: merging pull requests is a human decision."
+denyMessage = "N-08: merging pull requests and widening the agent's own access are human decisions."
 
 [[rule]]
 toolName = "run_shell_command"
@@ -193,7 +193,7 @@ denyMessage = "N-09: tunnels and public uploads are never allowed."
 
 [[rule]]
 toolName = "run_shell_command"
-commandRegex = '.*(/dev/tcp/|/dev/udp/|169\.254\.169\.254|metadata\.google\.internal|webhook\.site|pastebin\.com|transfer\.sh|0x0\.st|termbin\.com|ngrok\.io|ngrok-free\.app|ngrok\.app|trycloudflare\.com|interact\.sh|oast\.fun|oast\.pro|oast\.live|burpcollaborator\.net)'
+commandRegex = '.*(/dev/tcp/|/dev/udp/|169\.254\.169\.254|metadata\.google\.internal|webhook\.site|pastebin\.com|transfer\.sh|0x0\.st|termbin\.com|ngrok\.io|ngrok-free\.app|ngrok\.app|trycloudflare\.com|interact\.sh|oast\.fun|oast\.pro|oast\.live|burpcollaborator\.net|oastify\.com|requestcatcher\.com|ngrok\.dev|localhost\.run|serveo\.net|gofile\.io|tmpfiles\.org|catbox\.moe|bashupload\.com|dpaste\.com|hooks\.slack\.com|api\.telegram\.org|discord\.com/api/webhooks|discordapp\.com/api/webhooks)'
 decision = "deny"
 priority = 900
 denyMessage = "N-09: exfiltration endpoints and reverse shells are never allowed."
@@ -207,7 +207,7 @@ denyMessage = "N-09: reverse shells are never allowed."
 
 [[rule]]
 toolName = "web_fetch"
-argsPattern = '(169\.254\.169\.254|metadata\.google\.internal|webhook\.site|pastebin\.com|transfer\.sh|0x0\.st|termbin\.com|ngrok\.io|ngrok-free\.app|ngrok\.app|trycloudflare\.com|interact\.sh|oast\.fun|oast\.pro|oast\.live|burpcollaborator\.net)'
+argsPattern = '(169\.254\.169\.254|metadata\.google\.internal|webhook\.site|pastebin\.com|transfer\.sh|0x0\.st|termbin\.com|ngrok\.io|ngrok-free\.app|ngrok\.app|trycloudflare\.com|interact\.sh|oast\.fun|oast\.pro|oast\.live|burpcollaborator\.net|oastify\.com|requestcatcher\.com|ngrok\.dev|localhost\.run|serveo\.net|gofile\.io|tmpfiles\.org|catbox\.moe|bashupload\.com|dpaste\.com|hooks\.slack\.com|api\.telegram\.org|discord\.com/api/webhooks|discordapp\.com/api/webhooks)'
 decision = "deny"
 priority = 900
 denyMessage = "N-09: exfiltration and metadata endpoints are never allowed."
@@ -219,9 +219,150 @@ decision = "deny"
 priority = 900
 denyMessage = "N-11: privileged containers and host mounts are never allowed."
 
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["runas", "gsudo", "schtasks /create", "Register-ScheduledTask", "New-Service"]
+decision = "deny"
+priority = 900
+denyMessage = "N-03: privilege escalation and host persistence are never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*[Ss]tart-[Pp]rocess\s[^"&;|]*-[Vv]erb\s+[Rr]un[Aa]s'
+decision = "deny"
+priority = 900
+denyMessage = "N-03: elevation with -Verb RunAs is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(>|tee\s+-a|tee|cp\s[^"&;|]*|mv\s[^"&;|]*)\s+(~|\$HOME|/home/[^/\s"]+|/Users/[^/\s"]+|/root)/\.(bashrc|bash_profile|bash_login|zshrc|zprofile|zshenv|zlogin|profile)(\s|"|\\|$)'
+decision = "deny"
+priority = 900
+denyMessage = "N-03: writing shell startup files in the home directory is never allowed."
+
+[[rule]]
+toolName = ["write_file", "replace"]
+argsPattern = '"file_path":"(~|/home/[^/"]+|/Users/[^/"]+|/root)/(\.(bashrc|bash_profile|bash_login|zshrc|zprofile|zshenv|zlogin|profile)|Library/LaunchAgents/[^"]*|\.config/systemd/user/[^"]*|\.config/autostart/[^"]*)"'
+decision = "deny"
+priority = 900
+denyMessage = "N-03: writing shell startup or autostart files is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(ANTHROPIC_BASE_URL|ANTHROPIC_BEDROCK_BASE_URL|ANTHROPIC_VERTEX_BASE_URL|OPENAI_BASE_URL|OPENAI_API_BASE|GOOGLE_GEMINI_BASE_URL|CODE_ASSIST_ENDPOINT)='
+decision = "deny"
+priority = 900
+denyMessage = "N-04: repointing an agent's API endpoint is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["Set-MpPreference", "Add-MpPreference"]
+decision = "deny"
+priority = 900
+denyMessage = "N-04: weakening host protection is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(base64\s+(-d|-D|--decode)|base32\s+(-d|--decode)|xxd\s+-r|certutil\s+-decode)[^"]*\|\s*(sudo\s+|)(sh|bash|zsh|dash|ksh|python3|python|node|perl|ruby)\b'
+decision = "deny"
+priority = 900
+denyMessage = "N-06: decoding a payload into an interpreter is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(dig|nslookup|host|nc|ncat|netcat)\s[^"]*\|\s*(sudo\s+|)(sh|bash|zsh|dash|ksh)\b'
+decision = "deny"
+priority = 900
+denyMessage = "N-06: executing a network response is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(powershell|pwsh)(\.exe|)\s[^"&;|]*-([Ee]ncoded[Cc]ommand|[Ee]nc|[Ee]c|[Ee])\s'
+decision = "deny"
+priority = 900
+denyMessage = "N-06: encoded PowerShell commands are never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = 'git\s[^"&;|]*ext::'
+decision = "deny"
+priority = 900
+denyMessage = "N-06: the git ext:: transport executes arbitrary commands."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = 'gh\s+api\b[^"&;|]*(/pulls/[0-9]+/merge|/protection|/rulesets|/actions/secrets)'
+decision = "deny"
+priority = 900
+denyMessage = "N-08: merging, branch protection, and repository secrets are not reachable through gh api either."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = 'gh\s+repo\s+(create|edit)\b[^"&;|]*(--public|--visibility[ =]public)'
+decision = "deny"
+priority = 900
+denyMessage = "N-09: making a repository public is a human decision."
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["history -c", "history -w", "history -d", "unset HISTFILE", "Clear-History", "Clear-EventLog", "wevtutil cl"]
+decision = "deny"
+priority = 900
+denyMessage = "N-12: erasing shell history or event logs is never allowed."
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(rm|shred|truncate|unlink|mv)\s[^"&;|]*(\.claude/projects|\.codex/sessions|\.gemini/tmp|/var/log)(/|\s|"|\\|$)'
+decision = "deny"
+priority = 900
+denyMessage = "N-12: deleting or rewriting session transcripts and logs is never allowed."
+
+[[rule]]
+toolName = ["write_file", "replace"]
+argsPattern = '"file_path":"[^"]*(\.claude/projects/|\.codex/sessions/|\.gemini/tmp/)'
+decision = "deny"
+priority = 900
+denyMessage = "N-12: rewriting session transcripts is never allowed."
+
 # ------------------------------------------------------------------------------
 # Tier C-HITL — human approval for every invocation (ask_user)
 # ------------------------------------------------------------------------------
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["claude", "codex", "gemini", "copilot", "cursor-agent", "qwen", "goose", "opencode", "aider"]
+decision = "ask_user"
+priority = 500
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["code --install-extension", "code-insiders --install-extension", "cursor --install-extension", "windsurf --install-extension"]
+decision = "ask_user"
+priority = 500
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = '.*(GIT_SSH_COMMAND|GIT_SSH|GIT_EXTERNAL_DIFF|GIT_ASKPASS|GIT_PROXY_COMMAND|GIT_CONFIG_GLOBAL|GIT_CONFIG_COUNT|GIT_CONFIG_PARAMETERS)='
+decision = "ask_user"
+priority = 500
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = 'git\s[^"&;|]*(core\.fsmonitor|core\.ssh[Cc]ommand|core\.git[Pp]roxy|core\.ask[Pp]ass|diff\.external|credential\.helper|--upload-pack|--receive-pack|--config-env)'
+decision = "ask_user"
+priority = 500
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["git reflog expire", "git reflog delete", "git gc --prune=now"]
+decision = "ask_user"
+priority = 500
+
+[[rule]]
+toolName = ["write_file", "replace"]
+argsPattern = '"file_path":"[^"]*(\.git/config|\.git/hooks/|mcp\.json)'
+decision = "ask_user"
+priority = 500
+
 [[rule]]
 toolName = "run_shell_command"
 commandPrefix = [
