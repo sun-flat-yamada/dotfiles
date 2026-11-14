@@ -140,6 +140,7 @@ cd ~/dotfiles
 | `ai.gemini_settings` | `ai` | [`config/ai/gemini/settings.json`](config/ai/gemini/settings.json) | Win / WSL / Linux / macOS | Global Gemini CLI settings (`disableYoloMode: true`, `sandbox: true`) |
 | `ai.gemini_policy` | `ai` | [`.gemini/policies/permission-policy.toml`](.gemini/policies/permission-policy.toml) | Win / WSL / Linux / macOS | Global Gemini CLI Tier A/C/N permission guardrail policy (`~/.gemini/policies/`) |
 | `ai.codex_config` | `ai` | [`config/ai/codex/config.toml`](config/ai/codex/config.toml) | Win / WSL / Linux / macOS | Global OpenAI Codex CLI sandbox & secret environment exclusion |
+| `ai.kiro_permissions` | `ai` | [`config/ai/kiro/permissions.yaml`](config/ai/kiro/permissions.yaml) | Win / WSL / Linux / macOS | Kiro user-scope permission rules generated from the canonical permission definition (`~/.kiro/settings/permissions.yaml`) |
 | `packages.mise` | `packages` | [`packages/mise/config.toml`](packages/mise/config.toml) | Win / WSL / Linux / macOS | Polyglot runtime versions (`node`, `python`, `go`, `uv`, `ripgrep`, `fd`, `jq`) |
 
 ---

@@ -5,7 +5,7 @@ category: "documentation"
 type: "changelog"
 status: "active"
 date: 2026-10-22
-updated: 2026-11-13
+updated: 2026-11-14
 lang: "en"
 tags: ["changelog", "release", "dotfiles"]
 ---
@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Canonical permission definition** (`.agents/permissions/permission-policy.json`) and **generator** (`scripts/sync-permissions.py` with `--check`, `--write`, `--report`, `--install-antigravity`): one tool-neutral pattern list per rule ID, rendered into each tool's own format. CI fails when a generated file drifts.
+- **New enforcement targets**: GitHub Copilot CLI (`.github/hooks/permission-guard.json`, generated `--deny-tool` / `--deny-url` flags), Kiro (`config/ai/kiro/permissions.yaml`, manifest item `ai.kiro_permissions`), and Antigravity (`.agents/hooks.json`, generated `permissions` block).
+- **Guard hook** accepts Copilot CLI and Antigravity hook payloads and answers in their formats with `--format copilot` / `--format antigravity`.
 - **AI agent permission policy, November 2026 revision** (`.agents/rules/permission-rules-general.md`):
   - New rules `N-12` (audit trail tampering), `C-HITL-09` (starting a nested agent session such as `claude -p` or `codex exec`), and `C-HITL-10` (git configuration that runs a program, such as `core.fsmonitor` and `core.sshCommand`).
   - New evaluation principles 7 to 9: check what will run rather than what was written, give a second route the same gate, and treat repository-supplied configuration as code.
@@ -29,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests**: Codex `match` / `not_match` examples and Gemini regex loader constraints are now checked in `tests/test-permission-guard.py`.
 
 ### Changed
+- The permission lists in `.claude/settings.json` and `.vscode/settings.json` are now generated from the canonical definition. Claude Code gains `Edit(/.git/config)` and `Edit(/.git/hooks/**)` ask rules; its `.env` read denies are written as `**/.env`, `**/.env.*`, `**/*.env`, and the unsupported `!` exception entries are removed.
 - Codex, Gemini, Cursor, and VS Code enforcement files carry the same additions as the canonical policy.
 - The global Claude Code settings (`config/ai/claude/settings.json`) deny reads of the same credential stores as the project policy.
 - `docs/guides/ai-permission-guide.md` records the persona review, ten incidents from September to November 2026, and the options that were considered and not adopted.

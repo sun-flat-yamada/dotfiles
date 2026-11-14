@@ -25,8 +25,8 @@ tags:
 
 ## Commands
 - `/status`: Run `python scripts/dotfiles.py status` and `git status -sb`.
-- `/validate`: Run `python scripts/dotfiles.py validate`, `python scripts/validate-frontmatter.py`, and `python scripts/validate-filenames.py`.
-- `/test`: Run `python tests/test-dotfiles.py -v` and `python tests/test-permission-guard.py -v`.
+- `/validate`: Run `python scripts/dotfiles.py validate`, `python scripts/validate-frontmatter.py`, `python scripts/validate-filenames.py`, and `python scripts/sync-permissions.py --check`.
+- `/test`: Run `python tests/test-dotfiles.py -v`, `python tests/test-permission-guard.py -v`, and `python tests/test-sync-permissions.py -v`.
 - `/doctor`: Run `python scripts/dotfiles.py doctor`.
 - `/review`: Evaluate current branch against `.agents/agents/code-review.agent.md`.
 
@@ -34,5 +34,5 @@ tags:
 - **Manifest Single Source of Truth**: Every managed dotfile under `config/` or `packages/` MUST be registered in `config/manifest.json` using portable `~/` target paths.
 - **Naming Rule Enforcement**: Adhere strictly to `.agents/rules/naming-rules-general.md`. Agent definition files MUST use the suffix `*.agent.md` and MUST NEVER use the `agent-` prefix.
 - **Zero Secrets & Portability**: Never commit API keys, tokens, `.credentials.json`, `history.jsonl`, or hardcoded user paths (`C:\Users\...`). Verify with `python scripts/dotfiles.py validate`.
-- **Permission Tiers**: Follow `.agents/rules/permission-rules-general.md` (A: always allow, C: conditional, N: never).
+- **Permission Tiers**: Follow `.agents/rules/permission-rules-general.md` (A: always allow, C: conditional, N: never). The machine-readable source is `.agents/permissions/permission-policy.json`; never hand-edit generated permission lists, run `python scripts/sync-permissions.py --write`.
 - **Output Language**: Reply to the user and write PR titles/descriptions in Japanese; commit messages, code, identifiers, and comments stay in English.

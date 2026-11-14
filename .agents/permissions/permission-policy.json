@@ -1,0 +1,908 @@
+{
+  "version": 1,
+  "description": "Canonical, tool-neutral AI agent permission definition. The prose policy is .agents/rules/permission-rules-general.md. Edit this file, then run `python scripts/sync-permissions.py --write` to regenerate every tool-specific file.",
+  "syntax": {
+    "effect": "allow | ask | deny. deny beats ask beats allow.",
+    "shell / powershell": "Command globs: `*` matches any text; a trailing ` *` also matches the bare command.",
+    "command_regex": "Regular expressions over one command, for tools that match commands by regex.",
+    "read / write / read_except": "Path globs: `~/x` is under the home directory, `/x` is absolute, `**/x` matches at any depth, `./x` or a bare `x` is relative to the workspace root.",
+    "fetch / network / domains": "Host names (`*.` prefix for subdomains): `fetch` for the fetch tool, `network` for sandboxed commands, `domains` for both.",
+    "web_search": "true when the rule covers the built-in web search tool.",
+    "native": "Rules that exist in one tool only, keyed by tool name, written in that tool's own syntax."
+  },
+  "rules": [
+    {
+      "id": "A-02",
+      "effect": "allow",
+      "summary": "Read-only inspection commands",
+      "command_regex": [
+        "^git (status|diff|log|show|blame)\\b(?!.*--(output|ext-diff|textconv))"
+      ]
+    },
+    {
+      "id": "A-03",
+      "effect": "allow",
+      "summary": "Edit ordinary workspace files",
+      "write": [
+        "./**"
+      ]
+    },
+    {
+      "id": "A-04",
+      "effect": "allow",
+      "summary": "Web search",
+      "web_search": true
+    },
+    {
+      "id": "C-HITL",
+      "effect": "ask",
+      "summary": "Unresolved or host-management commands (default ask)",
+      "shell": [
+        "eval *",
+        "systemctl *",
+        "launchctl *"
+      ],
+      "powershell": [
+        "Start-Process *",
+        "Set-ExecutionPolicy *"
+      ],
+      "command_regex": [
+        "^(launchctl|systemctl|Start-Process|Set-ExecutionPolicy)\\b"
+      ]
+    },
+    {
+      "id": "C-HITL-01",
+      "effect": "ask",
+      "summary": "Outward VCS and collaboration",
+      "shell": [
+        "git push *",
+        "git clone *",
+        "git submodule add *",
+        "git remote add *",
+        "git remote set-url *",
+        "gh *"
+      ],
+      "powershell": [
+        "git push *",
+        "git clone *",
+        "gh *"
+      ],
+      "command_regex": [
+        "^git\\b.*\\bpush\\b",
+        "^git\\b.*\\b(clone|filter-branch|filter-repo)\\b",
+        "^git\\b.*\\b(remote (add|set-url)|submodule add|config --(global|system))\\b"
+      ]
+    },
+    {
+      "id": "C-HITL-02",
+      "effect": "ask",
+      "summary": "Dependency changes",
+      "shell": [
+        "npm install *",
+        "npm i *",
+        "npm add *",
+        "npm update *",
+        "npm uninstall *",
+        "npm exec *",
+        "npx *",
+        "pnpm add *",
+        "pnpm update *",
+        "pnpm remove *",
+        "pnpm dlx *",
+        "yarn add *",
+        "yarn upgrade *",
+        "yarn remove *",
+        "yarn dlx *",
+        "bun add *",
+        "bun update *",
+        "bun remove *",
+        "bunx *",
+        "pip install *",
+        "pip3 install *",
+        "pip uninstall *",
+        "python -m pip *",
+        "python3 -m pip *",
+        "uv add *",
+        "uv remove *",
+        "uv pip install *",
+        "uv tool install *",
+        "uvx *",
+        "poetry add *",
+        "poetry remove *",
+        "pipx *",
+        "cargo add *",
+        "cargo remove *",
+        "cargo install *",
+        "cargo update*",
+        "go get *",
+        "go install *",
+        "dotnet add *",
+        "dotnet remove *",
+        "dotnet tool install *",
+        "dart pub add *",
+        "dart pub remove *",
+        "dart pub upgrade*",
+        "flutter pub add *",
+        "flutter pub upgrade*",
+        "brew install *",
+        "choco install *",
+        "winget install *",
+        "scoop install *"
+      ],
+      "powershell": [
+        "npm install *",
+        "npx *",
+        "pip install *",
+        "uvx *",
+        "winget install *",
+        "scoop install *",
+        "choco install *"
+      ],
+      "write": [
+        "**/package.json",
+        "**/package-lock.json",
+        "**/npm-shrinkwrap.json",
+        "**/pnpm-lock.yaml",
+        "**/yarn.lock",
+        "**/bun.lock",
+        "**/bun.lockb",
+        "**/pyproject.toml",
+        "**/requirements*.txt",
+        "**/uv.lock",
+        "**/poetry.lock",
+        "**/Pipfile",
+        "**/Pipfile.lock",
+        "**/setup.py",
+        "**/setup.cfg",
+        "**/Cargo.toml",
+        "**/Cargo.lock",
+        "**/go.mod",
+        "**/go.sum",
+        "**/*.csproj",
+        "**/Directory.Packages.props",
+        "**/packages.lock.json",
+        "**/NuGet.config",
+        "**/pubspec.yaml",
+        "**/pubspec.lock",
+        "**/vcpkg.json",
+        "**/conanfile.txt",
+        "**/conanfile.py"
+      ]
+    },
+    {
+      "id": "C-HITL-03",
+      "effect": "ask",
+      "summary": "Destructive local operations",
+      "shell": [
+        "git reset --hard*",
+        "git clean *",
+        "git restore *",
+        "git checkout -- *",
+        "git stash drop*",
+        "git stash clear*",
+        "git branch -D *",
+        "git filter-branch *",
+        "git filter-repo *",
+        "git reflog expire*",
+        "git gc --prune=now*",
+        "rm -r *",
+        "rm -rf *",
+        "rm -fr *",
+        "rm -R *",
+        "rm -Rf *",
+        "rm --recursive *",
+        "find * -delete*",
+        "kill *",
+        "pkill *",
+        "killall *"
+      ],
+      "powershell": [
+        "git reset --hard*",
+        "git clean *",
+        "Remove-Item * -Recurse*",
+        "Remove-Item -Recurse*",
+        "Stop-Process *"
+      ],
+      "command_regex": [
+        "^git\\b.*\\b(reset --hard|clean|restore|checkout --|stash (drop|clear)|branch -D)\\b",
+        "^Remove-Item\\b",
+        "^rm\\b.*\\s(-[A-Za-z]*[rR]|--recursive)"
+      ]
+    },
+    {
+      "id": "C-HITL-04",
+      "effect": "ask",
+      "summary": "Network access through the shell",
+      "shell": [
+        "curl *",
+        "wget *",
+        "ssh *",
+        "scp *",
+        "sftp *",
+        "rsync *",
+        "ftp *",
+        "nc *",
+        "ncat *",
+        "netcat *",
+        "socat *",
+        "telnet *",
+        "ping *",
+        "dig *",
+        "nslookup *",
+        "host *"
+      ],
+      "powershell": [
+        "Invoke-WebRequest *",
+        "Invoke-RestMethod *",
+        "curl *",
+        "ssh *",
+        "scp *"
+      ],
+      "command_regex": [
+        "^(Invoke-WebRequest|iwr|Invoke-RestMethod|irm)\\b"
+      ]
+    },
+    {
+      "id": "C-HITL-05",
+      "effect": "ask",
+      "summary": "AI, CI, and governance configuration",
+      "write": [
+        ".claude/**",
+        ".codex/**",
+        ".cursor/**",
+        ".gemini/**",
+        ".vscode/**",
+        ".agents/**",
+        ".github/**",
+        ".githooks/**",
+        ".pre-commit-config.yaml",
+        "CLAUDE.md",
+        "AGENTS.md",
+        "GEMINI.md",
+        ".cursorrules",
+        ".gitignore"
+      ]
+    },
+    {
+      "id": "C-HITL-06",
+      "effect": "ask",
+      "summary": "Containers, cloud CLIs, IaC, and database clients",
+      "shell": [
+        "docker *",
+        "podman *",
+        "kubectl *",
+        "helm *",
+        "terraform *",
+        "tofu *",
+        "terragrunt *",
+        "pulumi *",
+        "cdk *",
+        "aws *",
+        "gcloud *",
+        "gsutil *",
+        "az *",
+        "psql *",
+        "mysql *",
+        "mongosh *",
+        "redis-cli *",
+        "sqlcmd *"
+      ],
+      "powershell": [
+        "docker *",
+        "kubectl *",
+        "terraform *",
+        "aws *",
+        "gcloud *",
+        "az *"
+      ]
+    },
+    {
+      "id": "C-HITL-07",
+      "effect": "ask",
+      "summary": "Leaving the sandbox; MCP servers, plugins, and extensions",
+      "shell": [
+        "claude mcp add*",
+        "claude plugin *",
+        "codex mcp add*",
+        "gemini mcp add*",
+        "gemini extensions install*",
+        "code --install-extension *",
+        "cursor --install-extension *"
+      ],
+      "powershell": [
+        "code --install-extension *"
+      ],
+      "command_regex": [
+        "^(code|code-insiders|codium|cursor|windsurf) --install-extension\\b"
+      ],
+      "write": [
+        ".mcp.json",
+        "**/.mcp.json",
+        ".vscode/mcp.json",
+        ".cursor/mcp.json"
+      ],
+      "native": {
+        "claude": [
+          "Bash(dangerouslyDisableSandbox:true)"
+        ]
+      }
+    },
+    {
+      "id": "C-HITL-08",
+      "effect": "ask",
+      "summary": "Dumping the process environment",
+      "shell": [
+        "env",
+        "printenv*"
+      ],
+      "powershell": [
+        "Get-ChildItem Env:*"
+      ]
+    },
+    {
+      "id": "C-HITL-09",
+      "effect": "ask",
+      "summary": "Nested agent sessions",
+      "shell": [
+        "claude -p *",
+        "claude --print *",
+        "codex exec *",
+        "gemini -p *",
+        "gemini --prompt *",
+        "copilot -p *",
+        "cursor-agent -p *"
+      ],
+      "powershell": [
+        "claude -p *",
+        "codex exec *",
+        "gemini -p *"
+      ],
+      "command_regex": [
+        "^(claude|codex|gemini|copilot|cursor-agent|qwen|goose|opencode|aider)\\b"
+      ]
+    },
+    {
+      "id": "C-HITL-10",
+      "effect": "ask",
+      "summary": "Git configuration that runs a program",
+      "shell": [
+        "git config --global *",
+        "git config --system *",
+        "git -c core.fsmonitor=*",
+        "git -c core.sshCommand=*",
+        "git -c diff.external=*",
+        "git config core.fsmonitor *",
+        "git config core.sshCommand *",
+        "git config diff.external *",
+        "git config credential.helper *",
+        "git config * credential.helper *"
+      ],
+      "command_regex": [
+        "^git\\b.*(core\\.fsmonitor|core\\.ssh[Cc]ommand|diff\\.external|credential\\.helper|--upload-pack|--receive-pack|--config-env|ext::|reflog (expire|delete))",
+        "(GIT_SSH_COMMAND|GIT_EXTERNAL_DIFF)="
+      ],
+      "write": [
+        ".git/config",
+        ".git/hooks/**"
+      ]
+    },
+    {
+      "id": "C-NET-01",
+      "effect": "allow",
+      "summary": "Package registries",
+      "network": [
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "crates.io",
+        "index.crates.io",
+        "static.crates.io",
+        "proxy.golang.org",
+        "sum.golang.org",
+        "api.nuget.org",
+        "pub.dev"
+      ]
+    },
+    {
+      "id": "C-NET-02",
+      "effect": "allow",
+      "summary": "Official documentation",
+      "fetch": [
+        "docs.github.com",
+        "docs.python.org",
+        "developer.mozilla.org",
+        "nodejs.org",
+        "www.typescriptlang.org",
+        "go.dev",
+        "pkg.go.dev",
+        "doc.rust-lang.org",
+        "docs.rs",
+        "learn.microsoft.com",
+        "dart.dev",
+        "api.dart.dev",
+        "en.cppreference.com",
+        "code.claude.com"
+      ]
+    },
+    {
+      "id": "N-01",
+      "effect": "deny",
+      "summary": "Secret access",
+      "shell": [
+        "git credential fill*",
+        "op read *",
+        "op item get *",
+        "vault kv get *",
+        "vault read *",
+        "pass show *",
+        "security find-generic-password*",
+        "security find-internet-password*",
+        "security dump-keychain*",
+        "kubectl config view * --raw*",
+        "kubectl config view --raw*",
+        "aws ecr get-login-password*",
+        "gh auth token*",
+        "gh auth status * --show-token*",
+        "kubectl get secret*",
+        "aws secretsmanager get-secret-value*",
+        "gcloud auth print-access-token*",
+        "gcloud auth print-identity-token*",
+        "az account get-access-token*"
+      ],
+      "powershell": [
+        "gh auth token*"
+      ],
+      "command_regex": [
+        "(\\.claude\\.json|\\.codex\\/auth\\.json|\\.gemini\\/oauth_creds\\.json|\\.config\\/github-copilot|\\.vault-token)",
+        "^(op (read|inject|item)|vault (kv|read)|pass show|security (find|dump)|git credential)\\b",
+        "(^|[\\s=\"'])(\\./)?\\.env(\\.(?!example|sample|template)\\S+)?(\\s|$)",
+        "(\\.ssh\\b|\\.aws\\/|\\.azure\\/|\\.kube\\/|\\.gnupg\\/|\\.config\\/gh\\/|\\.git-credentials|\\.netrc|\\.npmrc|\\.pypirc|\\.tfstate|\\.(pem|key|p12|pfx)\\b)"
+      ],
+      "read": [
+        "**/.env",
+        "**/.env.*",
+        "**/*.env",
+        "**/*.pem",
+        "**/*.key",
+        "**/*.p12",
+        "**/*.pfx",
+        "**/*.jks",
+        "**/*.keystore",
+        "**/*.kdbx",
+        "**/id_rsa",
+        "**/id_dsa",
+        "**/id_ecdsa",
+        "**/id_ed25519",
+        "**/*.tfstate",
+        "**/*.tfstate.backup",
+        "**/credentials.json",
+        "**/client_secret*.json",
+        "**/service-account*.json",
+        "**/service_account*.json",
+        "**/.npmrc",
+        "**/.pypirc",
+        "**/.netrc",
+        "**/.git-credentials",
+        "~/.ssh/**",
+        "~/.gnupg/**",
+        "~/.aws/**",
+        "~/.azure/**",
+        "~/.config/gcloud/**",
+        "~/.kube/**",
+        "~/.docker/config.json",
+        "~/.config/gh/**",
+        "~/.git-credentials",
+        "~/.netrc",
+        "~/.npmrc",
+        "~/.pypirc",
+        "~/.gem/credentials",
+        "~/.cargo/credentials",
+        "~/.cargo/credentials.toml",
+        "~/.claude/.credentials.json",
+        "~/.codex/auth.json",
+        "~/.gemini/oauth_creds.json",
+        "~/.claude.json",
+        "~/.claude/history.jsonl",
+        "~/.codex/history.jsonl",
+        "~/.config/github-copilot/**",
+        "~/.local/share/opencode/auth.json",
+        "~/.config/op/**",
+        "~/.vault-token",
+        "~/.terraform.d/credentials.tfrc.json",
+        "**/*.ppk",
+        "**/*.ovpn",
+        "~/.bash_history",
+        "~/.zsh_history",
+        "~/.local/state/zsh_history",
+        "~/AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/**",
+        "~/.gitconfig.local",
+        "~/.powershell.local.ps1",
+        "~/.zshrc.local",
+        "~/.bashrc.local",
+        "**/.secrets",
+        "~/Library/Keychains/**",
+        "/proc/*/environ"
+      ],
+      "read_except": [
+        "**/.env.example",
+        "**/.env.sample",
+        "**/.env.template"
+      ]
+    },
+    {
+      "id": "N-03",
+      "effect": "deny",
+      "summary": "Privilege escalation and host modification",
+      "shell": [
+        "sudo *",
+        "su *",
+        "doas *",
+        "pkexec *",
+        "crontab *",
+        "runas *",
+        "gsudo *",
+        "schtasks /create*"
+      ],
+      "powershell": [
+        "sudo *",
+        "gsudo *",
+        "runas *",
+        "Start-Process * -Verb RunAs*",
+        "Register-ScheduledTask *",
+        "New-Service *",
+        "schtasks /create*"
+      ],
+      "command_regex": [
+        "^(sudo|su|doas|pkexec|crontab|runas|gsudo|schtasks|Register-ScheduledTask|New-Service)\\b",
+        "(>>?|\\btee\\b.*)\\s*(~|\\$HOME)\\/\\.(bashrc|bash_profile|zshrc|zprofile|zshenv|profile)\\b"
+      ],
+      "write": [
+        "~/.bashrc",
+        "~/.bash_profile",
+        "~/.zshrc",
+        "~/.zprofile",
+        "~/.profile",
+        "~/.zshenv",
+        "~/.zlogin",
+        "~/.bash_login",
+        "~/.bash_logout",
+        "~/.config/fish/config.fish",
+        "~/Library/LaunchAgents/**",
+        "~/.config/systemd/user/**",
+        "~/.config/autostart/**",
+        "~/Documents/PowerShell/**",
+        "~/.config/powershell/**",
+        "~/.ssh/**",
+        "~/.gitconfig",
+        "/etc/**",
+        "/usr/**"
+      ]
+    },
+    {
+      "id": "N-04",
+      "effect": "deny",
+      "summary": "Disabling guardrails",
+      "shell": [
+        "* --dangerously-skip-permissions*",
+        "* --allow-dangerously-skip-permissions*",
+        "* --permission-mode bypassPermissions*",
+        "* --permission-mode=bypassPermissions*",
+        "* --dangerously-bypass-approvals-and-sandbox*",
+        "* --yolo*",
+        "* --approval-mode yolo*",
+        "* --approval-mode=yolo*",
+        "* --trust-all-tools*",
+        "* --allow-all-tools*",
+        "* danger-full-access*",
+        "git * --no-verify*",
+        "git commit -n*",
+        "git -c core.hooksPath*",
+        "git config core.hooksPath *",
+        "git config * core.hooksPath *",
+        "git config --unset* core.hooksPath*",
+        "git config unset core.hooksPath*"
+      ],
+      "powershell": [
+        "Set-MpPreference *",
+        "Add-MpPreference *",
+        "* --dangerously-skip-permissions*",
+        "* --yolo*",
+        "* --dangerously-bypass-approvals-and-sandbox*",
+        "git * --no-verify*"
+      ],
+      "command_regex": [
+        "--no-verify\\b|core\\.hooks[Pp]ath",
+        "(--dangerously-skip-permissions|--dangerously-bypass-approvals-and-sandbox|--yolo|--trust-all-tools|--allow-all-tools|danger-full-access|bypassPermissions)",
+        "^(Set-MpPreference|Add-MpPreference)\\b",
+        "(ANTHROPIC_BASE_URL|OPENAI_BASE_URL|GOOGLE_GEMINI_BASE_URL)="
+      ],
+      "write": [
+        "~/.claude/settings.json",
+        "~/.codex/config.toml",
+        "~/.gemini/settings.json"
+      ]
+    },
+    {
+      "id": "N-05",
+      "effect": "deny",
+      "summary": "Irreversible destruction",
+      "shell": [
+        "git push --force*",
+        "git push * --force*",
+        "git push -f*",
+        "git push * -f",
+        "git push * -f *",
+        "git push --mirror*",
+        "git push * --mirror*",
+        "git push --delete *",
+        "git push * --delete *",
+        "git push -d *",
+        "git push * -d *",
+        "git push * :*",
+        "git push * +*",
+        "rm -rf /",
+        "rm -rf ~",
+        "rm -rf ~/",
+        "rm -rf $HOME",
+        "rm -rf .",
+        "rm -rf ..",
+        "mkfs*",
+        "dd *",
+        "shutdown*",
+        "reboot*",
+        "halt*",
+        "poweroff*",
+        "gh repo delete*"
+      ],
+      "powershell": [
+        "Format-Volume *",
+        "Clear-Disk *",
+        "Stop-Computer*",
+        "Restart-Computer*",
+        "git push --force*",
+        "git push * --force*",
+        "git push -f*",
+        "git push * -f",
+        "git push * -f *"
+      ],
+      "command_regex": [
+        "^(diskpart|vssadmin|Format-Volume|Clear-Disk|Stop-Computer|Restart-Computer)\\b"
+      ]
+    },
+    {
+      "id": "N-06",
+      "effect": "ask",
+      "summary": "Executing untrusted remote code",
+      "command_regex": [
+        "(base64 (-d|-D|--decode)|xxd -r|-[Ee]ncoded[Cc]ommand|\\s-enc\\s)"
+      ]
+    },
+    {
+      "id": "N-06",
+      "effect": "deny",
+      "summary": "Executing untrusted remote code",
+      "shell": [
+        "powershell * -EncodedCommand*",
+        "pwsh * -EncodedCommand*",
+        "powershell -EncodedCommand*",
+        "pwsh -EncodedCommand*",
+        "git clone ext::*",
+        "sh",
+        "bash",
+        "zsh",
+        "dash",
+        "ksh",
+        "sh -s*",
+        "bash -s*",
+        "python",
+        "python3",
+        "node",
+        "perl",
+        "ruby"
+      ],
+      "powershell": [
+        "Invoke-Expression *",
+        "* -EncodedCommand *"
+      ],
+      "command_regex": [
+        "^(Invoke-Expression|iex)\\b"
+      ]
+    },
+    {
+      "id": "N-07",
+      "effect": "deny",
+      "summary": "Production and shared-infrastructure mutation",
+      "shell": [
+        "gh secret *",
+        "gh variable *",
+        "terraform destroy*",
+        "terraform apply -auto-approve*",
+        "terraform apply * -auto-approve*",
+        "tofu destroy*",
+        "pulumi destroy*",
+        "cdk destroy*",
+        "kubectl delete namespace*",
+        "kubectl delete ns *",
+        "kubectl delete * --all*",
+        "aws s3 rb *",
+        "aws s3 rm * --recursive*",
+        "gcloud projects delete*",
+        "az group delete*",
+        "dropdb *"
+      ]
+    },
+    {
+      "id": "N-08",
+      "effect": "deny",
+      "summary": "Self-approval and protected branches",
+      "shell": [
+        "git push * HEAD:main*",
+        "git push * HEAD:master*",
+        "git push * main",
+        "git push * master",
+        "git push * main *",
+        "git push * master *",
+        "gh pr merge*",
+        "gh pr review * --approve*",
+        "gh pr review --approve*",
+        "gh auth refresh*",
+        "gh ssh-key add*",
+        "gh gpg-key add*",
+        "gh repo deploy-key add*",
+        "gh api * -X PUT */merge*",
+        "gh api */pulls/*/merge*"
+      ],
+      "powershell": [
+        "git push * main",
+        "git push * master",
+        "gh pr merge*"
+      ]
+    },
+    {
+      "id": "N-09",
+      "effect": "deny",
+      "summary": "Exfiltration channels",
+      "shell": [
+        "gh gist create*",
+        "gh repo create * --public*",
+        "gh repo edit * --visibility public*",
+        "gh repo edit * --visibility=public*",
+        "ngrok *",
+        "cloudflared tunnel*",
+        "ssh -R *",
+        "* /dev/tcp/*"
+      ],
+      "domains": [
+        "169.254.169.254",
+        "metadata.google.internal",
+        "pastebin.com",
+        "paste.ee",
+        "hastebin.com",
+        "transfer.sh",
+        "0x0.st",
+        "termbin.com",
+        "webhook.site",
+        "*.pipedream.net",
+        "*.ngrok.io",
+        "*.ngrok-free.app",
+        "*.ngrok.app",
+        "*.trycloudflare.com",
+        "*.interact.sh",
+        "*.oast.fun",
+        "*.oast.pro",
+        "*.oast.live",
+        "*.burpcollaborator.net",
+        "oastify.com",
+        "*.oastify.com",
+        "requestcatcher.com",
+        "*.requestcatcher.com",
+        "*.beeceptor.com",
+        "canarytokens.com",
+        "*.ngrok.dev",
+        "localhost.run",
+        "*.localhost.run",
+        "serveo.net",
+        "*.serveo.net",
+        "*.loca.lt",
+        "file.io",
+        "gofile.io",
+        "tmpfiles.org",
+        "catbox.moe",
+        "*.catbox.moe",
+        "bashupload.com",
+        "dpaste.com",
+        "api.imgur.com",
+        "hooks.slack.com",
+        "api.telegram.org"
+      ]
+    },
+    {
+      "id": "N-10",
+      "effect": "deny",
+      "summary": "Publishing and registry credentials",
+      "shell": [
+        "gh release create*",
+        "gh release upload*",
+        "gh release delete*",
+        "gh auth login*",
+        "npm publish*",
+        "npm unpublish*",
+        "npm deprecate*",
+        "npm dist-tag*",
+        "npm owner*",
+        "npm token*",
+        "npm login*",
+        "npm adduser*",
+        "pnpm publish*",
+        "yarn publish*",
+        "yarn npm publish*",
+        "bun publish*",
+        "twine upload*",
+        "uv run *twine upload*",
+        "uvx *twine upload*",
+        "poetry run *twine upload*",
+        "pipx run *twine upload*",
+        "python* -m twine upload*",
+        "uv publish*",
+        "poetry publish*",
+        "cargo publish*",
+        "cargo yank*",
+        "cargo owner*",
+        "cargo login*",
+        "dotnet nuget push*",
+        "dotnet nuget delete*",
+        "nuget push*",
+        "dart pub publish*",
+        "flutter pub publish*",
+        "gem push*",
+        "docker push*",
+        "docker login*",
+        "podman push*"
+      ],
+      "powershell": [
+        "npm publish*",
+        "docker push*"
+      ]
+    },
+    {
+      "id": "N-11",
+      "effect": "deny",
+      "summary": "Container escape",
+      "shell": [
+        "docker run --privileged*",
+        "docker run * --privileged*",
+        "docker run * -v /:*",
+        "docker * /var/run/docker.sock*"
+      ]
+    },
+    {
+      "id": "N-12",
+      "effect": "ask",
+      "summary": "Audit trail tampering",
+      "command_regex": [
+        "(\\.claude\\/projects|\\.codex\\/sessions|\\.gemini\\/tmp|\\/var\\/log)"
+      ]
+    },
+    {
+      "id": "N-12",
+      "effect": "deny",
+      "summary": "Audit trail tampering",
+      "shell": [
+        "history -c*",
+        "unset HISTFILE*"
+      ],
+      "powershell": [
+        "Clear-History*",
+        "Clear-EventLog *"
+      ],
+      "command_regex": [
+        "^Clear-History\\b",
+        "HISTFILE=|^history -[cwd]|^unset HISTFILE"
+      ],
+      "write": [
+        "~/.claude/projects/**",
+        "~/.codex/sessions/**"
+      ]
+    }
+  ]
+}

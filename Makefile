@@ -37,6 +37,7 @@ validate:
 test:
 	$(PYTHON) tests/test-dotfiles.py -v
 	$(PYTHON) tests/test-permission-guard.py -v
+	$(PYTHON) tests/test-sync-permissions.py -v
 	$(PYTHON) tests/test-validate-frontmatter.py -v
 
 hooks:

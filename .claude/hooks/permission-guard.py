@@ -28,6 +28,11 @@ from typing import Callable, Dict, List, Optional, Sequence, TextIO, Tuple
 
 Decision = Tuple[str, str]  # (permission decision, reason starting with "[RULE-ID]")
 
+# Output shapes selected with --format: each tool reads a different decision document.
+FORMAT_CLAUDE = "claude"
+FORMAT_COPILOT = "copilot"
+FORMAT_ANTIGRAVITY = "antigravity"
+
 DENY = "deny"
 ASK = "ask"
 POLICY_FILE = ".agents/rules/permission-rules-general.md"
@@ -1098,16 +1103,39 @@ def evaluate_file_write(path: str, content: str) -> Optional[Decision]:
 
 
 def written_text(tool_input: Dict[str, object]) -> str:
-    texts = [tool_input.get(key) for key in ("content", "new_string", "newString", "code", "new_source", "text")]
+    texts = [tool_input.get(key) for key in ("content", "new_string", "newString", "new_str", "file_text", "code", "new_source", "text")]
     edits = tool_input.get("edits")
     if isinstance(edits, list):
         texts.extend(edit.get("new_string") for edit in edits if isinstance(edit, dict))
     return "\n".join(text for text in texts if isinstance(text, str))
 
 
+def antigravity_tool_input(arguments: Dict[str, object]) -> Dict[str, object]:
+    chunks = arguments.get("ReplacementChunks")
+    texts = [arguments.get("CodeContent"), arguments.get("ReplacementContent")]
+    if isinstance(chunks, list):
+        texts.extend(chunk.get("ReplacementContent") for chunk in chunks if isinstance(chunk, dict))
+    content = "\n".join(text for text in texts if isinstance(text, str))
+    return {"command": arguments.get("CommandLine"), "file_path": arguments.get("TargetFile"), "content": content}
+
+
+def tool_input_of(event: Dict[str, object]) -> Optional[Dict[str, object]]:
+    """Return the tool arguments from a Claude Code, Copilot CLI, or Antigravity hook payload."""
+    tool_call = event.get("toolCall")
+    if isinstance(tool_call, dict) and isinstance(tool_call.get("args"), dict):
+        return antigravity_tool_input(tool_call["args"])
+    arguments = event.get("tool_input", event.get("toolArgs"))
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except ValueError:
+            return None
+    return arguments if isinstance(arguments, dict) else None
+
+
 def evaluate_event(event: Dict[str, object]) -> Optional[Decision]:
-    tool_input = event.get("tool_input")
-    if not isinstance(tool_input, dict):
+    tool_input = tool_input_of(event)
+    if tool_input is None:
         return None
     command = tool_input.get("command")
     if isinstance(command, str):
@@ -1117,7 +1145,26 @@ def evaluate_event(event: Dict[str, object]) -> Optional[Decision]:
     return evaluate_file_write(path, written_text(tool_input)) if path else None
 
 
-def main(stdin: TextIO = sys.stdin, stdout: TextIO = sys.stdout) -> int:
+def format_decision(decision: str, reason: str, output_format: str) -> Dict[str, object]:
+    if output_format == FORMAT_COPILOT:
+        return {"permissionDecision": decision, "permissionDecisionReason": reason}
+    if output_format == FORMAT_ANTIGRAVITY:
+        # force_ask ignores cached "always allow" grants: approvals do not persist (principle 6).
+        return {"decision": "force_ask" if decision == "ask" else decision, "reason": reason}
+    output = {"hookEventName": "PreToolUse", "permissionDecision": decision, "permissionDecisionReason": reason}
+    return {"hookSpecificOutput": output}
+
+
+def output_format_of(argv: Sequence[str]) -> str:
+    for index, argument in enumerate(argv):
+        if argument == "--format" and index + 1 < len(argv):
+            return argv[index + 1]
+        if argument.startswith("--format="):
+            return argument.split("=", 1)[1]
+    return FORMAT_CLAUDE
+
+
+def main(stdin: TextIO = sys.stdin, stdout: TextIO = sys.stdout, argv: Optional[Sequence[str]] = None) -> int:
     try:
         event = json.load(stdin)
     except (ValueError, OSError):
@@ -1125,8 +1172,8 @@ def main(stdin: TextIO = sys.stdin, stdout: TextIO = sys.stdout) -> int:
     result = evaluate_event(event) if isinstance(event, dict) else None
     if result:
         decision, reason = result
-        output = {"hookEventName": "PreToolUse", "permissionDecision": decision, "permissionDecisionReason": reason}
-        json.dump({"hookSpecificOutput": output}, stdout)
+        output_format = output_format_of(sys.argv[1:] if argv is None else argv)
+        json.dump(format_decision(decision, reason, output_format), stdout)
     return 0
 
 

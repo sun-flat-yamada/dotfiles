@@ -30,7 +30,7 @@ jobs:
 
       - name: Syntax & Compilation Check
         run: |
-          python -m py_compile scripts/dotfiles.py scripts/apply-template.py scripts/install-hooks.py scripts/validate-filenames.py scripts/validate-frontmatter.py .claude/hooks/permission-guard.py tests/test-dotfiles.py tests/test-permission-guard.py tests/test-validate-frontmatter.py
+          python -m py_compile scripts/dotfiles.py scripts/apply-template.py scripts/install-hooks.py scripts/validate-filenames.py scripts/validate-frontmatter.py scripts/sync-permissions.py .claude/hooks/permission-guard.py tests/test-dotfiles.py tests/test-permission-guard.py tests/test-sync-permissions.py tests/test-validate-frontmatter.py
 
       - name: Dotfiles Manifest & Config Validation
         run: |
@@ -41,6 +41,7 @@ jobs:
         run: |
           python tests/test-dotfiles.py -v
           python tests/test-permission-guard.py -v
+          python tests/test-sync-permissions.py -v
           python tests/test-validate-frontmatter.py -v
 
       - name: Repository Governance Checks (Front-Matter, Filenames, Placeholders)
@@ -48,6 +49,7 @@ jobs:
           python scripts/validate-frontmatter.py
           python scripts/validate-filenames.py
           python scripts/apply-template.py --check
+          python scripts/sync-permissions.py --check
 
       - name: POSIX Bootstrap Dry-Run & Isolated Install Verification
         run: |
@@ -82,6 +84,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/test-permission-guard.py -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/test-sync-permissions.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/test-validate-frontmatter.py -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -95,6 +99,7 @@ jobs:
           python scripts/validate-filenames.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/apply-template.py --check
+          python scripts/sync-permissions.py --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           ./install.ps1 -Validate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
