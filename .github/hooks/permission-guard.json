@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "python3 .claude/hooks/permission-guard.py --format copilot",
+        "powershell": "python .claude/hooks/permission-guard.py --format copilot",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

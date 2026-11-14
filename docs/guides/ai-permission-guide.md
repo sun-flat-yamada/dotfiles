@@ -5,7 +5,7 @@ category: "guide"
 type: "security"
 status: "active"
 date: 2026-10-01
-updated: 2026-11-13
+updated: 2026-11-14
 lang: "ja"
 tags:
   - "security"
@@ -36,12 +36,16 @@ tags:
 | ツール | 設定ファイル | 反映条件 |
 | :--- | :--- | :--- |
 | 共通（正規ポリシー） | `.agents/rules/permission-rules-general.md` | 各エージェントの指示ファイルから参照 |
-| Claude Code | `.claude/settings.json`、`.claude/hooks/permission-guard.py` | `allow` はワークスペース信頼後に有効。`deny`/`ask` は即時有効 |
+| 共通（機械可読な正本） | `.agents/permissions/permission-policy.json`、`scripts/sync-permissions.py` | ルールIDごとのパターンを1か所で管理し、下表の「生成」と書かれたファイルを生成（5.6節） |
+| Claude Code | `.claude/settings.json`（権限リストとネットワーク許可は生成）、`.claude/hooks/permission-guard.py` | `allow` はワークスペース信頼後に有効。`deny`/`ask` は即時有効 |
 | OpenAI Codex CLI | `.codex/config.toml`、`.codex/rules/permission-policy.rules` | プロジェクトを trusted にした後に読み込み |
 | Gemini CLI / Antigravity | `.gemini/settings.json`、`.gemini/policies/permission-policy.toml` | ポリシーは `~/.gemini/policies/` へのコピーが必要（後述） |
 | Cursor | `.cursor/cli.json`（CLI）、`.cursor/permissions.json`（IDE） | リポジトリを開くと読み込み |
-| GitHub Copilot（VS Code） | `.vscode/settings.json` | ワークスペース設定として適用 |
-| テスト | `tests/test-permission-guard.py` | `python tests/test-permission-guard.py -v`（CIでも実行） |
+| GitHub Copilot（VS Code） | `.vscode/settings.json`（自動承認マップとネットワーク許可は生成） | ワークスペース設定として適用 |
+| GitHub Copilot CLI | `.github/hooks/permission-guard.json`、`.agents/permissions/generated/copilot-cli-args.txt`（生成） | フックはリポジトリで自動読み込み。フラグは起動時に渡す（5.7節） |
+| Kiro | `config/ai/kiro/permissions.yaml`（生成） | `~/.kiro/settings/permissions.yaml` へ導入（5.8節） |
+| Antigravity | `.agents/hooks.json`、`.agents/permissions/generated/antigravity-permissions.json`（生成） | フックはワークスペースで読み込み。権限ブロックはユーザー設定へマージ（5.9節） |
+| テスト | `tests/test-permission-guard.py`、`tests/test-sync-permissions.py` | 両方ともCIで実行。後者は正本と生成物のずれを検出 |
 
 ---
 
@@ -191,7 +195,7 @@ N-01 秘密情報へのアクセス／N-02 秘密情報の書き込み・漏え�
   ```
 
 - **注意**: Gemini は ReDoS 対策として「閉じ括弧の直後に量指定子がある正規表現」（`)?` など）を含むルールを読み込み時に破棄します。ルールを追加する際は `(x|)` のような代替表記を使ってください。
-- **Antigravity**: ファイルベースの権限設定がないため、UIのターミナル実行ポリシーを「承認を求める」にし、許可/拒否リストへ本ポリシーの A / N を反映します。Turbo（自動実行）は隔離環境でのみ使用してください。
+- **Antigravity**: 5.9節を参照してください。
 
 ### 5.4 Cursor
 
@@ -204,6 +208,71 @@ N-01 秘密情報へのアクセス／N-02 秘密情報の書き込み・漏え�
 - `.vscode/settings.json`: 全体自動承認の無効化、読み取り専用gitのみ自動承認、C-HITL / N に該当するコマンドは `false`（承認必須）、秘密ファイル・AI/CI設定・依存マニフェストの編集は承認必須、macOS/Linux でエージェント用サンドボックスを有効化（ネットワークはレジストリのみ）。
 - `chat.useClaudeHooks: true` により、Local ハーネスでも `.claude/settings.json` の PreToolUse フック（`permission-guard.py`）が動作し、N を**ブロック**します（VS Codeの `false` は承認要求止まりのため）。Python 3.8以上が必要です。
 - **Copilot coding agent（GitHub上）**: リポジトリ設定のファイアウォール許可リストを C-NET の宛先に合わせ、ブランチ保護で `copilot/*` 以外へのpushと自己承認を防ぎます。
+
+### 5.6 正本定義と生成スクリプト
+
+パターンの正本は `.agents/permissions/permission-policy.json` です。ルールID（`N-01` など）と効果（`allow` / `ask` / `deny`）の組ごとに、ツールに依存しない形で次の項目を持ちます。
+
+| 項目 | 内容 |
+| :--- | :--- |
+| `shell` / `powershell` | コマンドのglob。`*` は任意の文字列、末尾の ` *` は引数なしの実行にも一致 |
+| `command_regex` | コマンドを正規表現で判定するツール向けの式 |
+| `read` / `write` / `read_except` | パスのglob。`~/x` はホーム、`/x` は絶対パス、`**/x` は任意の階層、`./x` または `x` はワークスペース相対 |
+| `fetch` / `network` / `domains` | ホスト名。`fetch` は取得ツール、`network` はサンドボックス内コマンド、`domains` は両方 |
+| `native` | 1つのツールにしかないルール（そのツールの書式のまま） |
+
+```bash
+python scripts/sync-permissions.py --check    # 生成物が正本と一致するか（CIで実行）
+python scripts/sync-permissions.py --write    # 正本から全ツールの設定を再生成
+python scripts/sync-permissions.py --report   # ツールごとに表現できなかった項目を一覧
+```
+
+生成スクリプトは各ファイルのうち権限に関するキーだけを書き換え、サンドボックスやフックなど他のキーは保持します。ツールが表現できない項目は黙って捨てず、`--report` に理由付きで出力します。Codex・Gemini CLI・Cursor のファイルは今回の生成対象外で、従来どおり手作業で維持します。
+
+| ツール | 正本からの変換 | 表現できない項目 |
+| :--- | :--- | :--- |
+| Claude Code | `Bash(…)` / `PowerShell(…)` / `Read(…)` / `Edit(…)` / `WebFetch(domain:…)`、サンドボックスのドメイン | `command_regex`（ガードフックが担当）、`read_except`（除外構文なし） |
+| Copilot（VS Code） | globを正規表現へ変換し、ルールIDごとに1つの `false` エントリへ集約 | ホーム・絶対パス（編集承認はワークスペース内のみ対象） |
+| Copilot CLI | プログラム全体または `git`/`gh` の第1階層サブコマンドを拒否するものだけ `--deny-tool=shell(…)` に | それより細かい条件、`ask`、パス（フックが担当） |
+| Kiro | `shell` / `filesystem` / `fs_write` / `web_fetch` / `sandbox_network` の各ルール。`read_except` は `exclude` に対応 | `command_regex`、ワークスペース全体への書き込み許可 |
+| Antigravity | 前方一致で書けるものは `command(語)`、それ以外は `command(regex:…)`。パスは `read_file` / `write_file` | globを含むパス（`**/*.pem` など）、サンドボックスのドメイン許可 |
+
+### 5.7 GitHub Copilot CLI
+
+- **フック**: `.github/hooks/permission-guard.json` が `preToolUse` で共有ガード（`permission-guard.py --format copilot`）を呼び出し、N を拒否、C-HITL を確認にします。Copilot CLI は `.claude/settings.json` のフックも読み込みますが、出力形式が異なるため専用の定義を置いています。Copilot coding agent（GitHub上）は `.github/hooks/*.json` だけを読み込み、`ask` を拒否として扱います。
+- **フラグ**: 権限フラグはセッション単位で、リポジトリのファイルからは読み込まれません。生成された引数ファイルを起動時に渡してください。
+
+  ```bash
+  # bash / zsh
+  copilot-safe() { local args; mapfile -t args < .agents/permissions/generated/copilot-cli-args.txt; copilot "${args[@]}" "$@"; }
+  ```
+
+  ```powershell
+  # PowerShell
+  function copilot-safe { copilot @(Get-Content .agents/permissions/generated/copilot-cli-args.txt) @args }
+  ```
+
+- `--allow-all-tools` と `--yolo` は N-04 です。生成物に許可フラグは含めていません（許可されていない操作は都度確認になります）。
+
+### 5.8 Kiro
+
+- Kiro（IDE と CLI v3）の権限は `permissions.yaml` で定義します。読み込まれるのはユーザースコープ（`~/.kiro/settings/permissions.yaml`）と、リポジトリ外に保存されるワークスペーススコープだけで、クローンしたリポジトリからは注入できません。
+- `config/ai/kiro/permissions.yaml` を `ai` プロファイルで導入します（`python scripts/dotfiles.py install --profile ai`）。全ワークスペースに適用されます。
+- 評価は deny、ask、allow の順に厳しい側が優先です。複合コマンド（`;`、`&&`、`|`）は分割して個別に判定されます。
+- IDE で「常に許可」を選ぶとルールが追記されることがあります。C-HITL の項目は恒久承認しないでください（原則6）。
+
+### 5.9 Google Antigravity
+
+- **フック**: `.agents/hooks.json`（ワークスペース）が `run_command` とファイル書き込みツールの前に共有ガード（`--format antigravity`）を呼び出します。確認が必要な操作には `force_ask` を返し、保存済みの「常に許可」を無視させます。
+- **権限ブロック**: CLI の権限は `~/.gemini/antigravity-cli/settings.json` の `permissions` にあり、ワークスペース単位のファイルはありません。このファイルは CLI 自身も書き込むため、シンボリックリンクではなくマージで導入します。
+
+  ```bash
+  python scripts/sync-permissions.py --install-antigravity
+  ```
+
+  既存の他のキーは保持し、元のファイルを `settings.json.bak` に残し、`~/` を実際のホームパスへ展開します。`permissions` ブロックは置き換えられるため、個人で追加したルールがある場合は再実行後に戻してください。
+- **アプリ（IDE）**: 権限はUIのプリセットで管理されます。「Request Review」を選び、Turbo は隔離環境でのみ使用してください。フックはアプリでも読み込まれます。
+- `--dangerously-skip-permissions` は確認を省略し、フックも実行されないと報告されています（N-04）。
 
 ---
 
@@ -224,6 +293,10 @@ N-01 秘密情報へのアクセス／N-02 秘密情報の書き込み・漏え�
 ```bash
 # ガードフックの単体テスト（CIでも実行）
 python tests/test-permission-guard.py -v
+
+# 正本と各ツールの生成物の一致、変換ロジックのテスト（CIでも実行）
+python scripts/sync-permissions.py --check
+python tests/test-sync-permissions.py -v
 
 # 設定ファイルの構文チェック
 python -c "import json,sys; [json.load(open(p)) for p in sys.argv[1:]]" \
@@ -248,7 +321,8 @@ codex execpolicy check --rules .codex/rules/permission-policy.rules git push ori
 - **テスト実行は任意コード実行と等価**: エージェントが編集したテストやビルドスクリプトを実行するため、サンドボックスがない環境（ネイティブWindows、bubblewrap未導入のLinux）では毎回承認になります。
 - **変数経由の間接実行は検査できない**: `a=sudo; $a ls` のように実行時に決まるコマンド名、スクリプトファイルに書いてから実行する形（`curl -o x.sh … && bash x.sh`）は、ガードフックでは判定できません。前者はサンドボックス、後者は `curl` の承認（C-HITL-04）とサンドボックスが後ろ盾です。
 - **`git status` 自体が設定を実行する**: リポジトリの `.git/config` にある `core.fsmonitor` などは、エージェントが読み取り専用のつもりで実行する `git status` でも動きます（GitSpawn）。ルールでは防げないため、ファイルとして受け取ったリポジトリは使い捨てコンテナで開くか、先に `.git/config` を確認してください。
-- **ガードフックが効かないツールがある**: フックは Claude Code と VS Code（`chat.useClaudeHooks`）でのみ動作します。Codex・Gemini・Cursor は各ツールのパターンルールとサンドボックスのみで、原則7（実行される形で判定）の保証は弱くなります。
+- **実機で未検証の形式がある**: Copilot CLI・Kiro・Antigravity の実行ファイルはこのリポジトリのCIにないため、生成物は公式ドキュメントの書式と単体テストで確認したものです。特に Kiro の `web_fetch` と `sandbox_network` の一致形式、Antigravity の `command(regex:…)` が部分一致か全体一致か、Copilot CLI の `--deny-url` のサブドメインの扱いは文書に明記がありません。導入後に、各ツールで拒否対象のコマンド（例: `sudo ls`）が実際に止まること、Antigravity CLI では `/hooks` にフックが表示されることを確認してください。
+- **ガードフックが効かないツールがある**: フックは Claude Code、VS Code（`chat.useClaudeHooks`）、Copilot CLI、Antigravity で動作します。Kiro はパターンルールのみです。Codex・Gemini・Cursor は各ツールのパターンルールとサンドボックスのみで、原則7（実行される形で判定）の保証は弱くなります。
 - **ヘッドレス実行と子セッション**: `claude -p` や SDK は信頼ダイアログを出さず、リポジトリのフックと `env` を使います。C-HITL-09 は起動時点の確認であり、子セッションの中身までは制御しません。
 - **許可ドメイン経由の流出**: レジストリやGitHubなど広いドメインへの通信は、アップロードやドメインフロンティングに悪用される余地があります。許可リストは最小限に保ってください。
 - **ツールごとの表現力の差**: Codex はフラグ位置を問わない一致ができず、Cursor CLI には ask がなく、VS Code の `false` は承認止まり、Gemini のワークスペースポリシーは無効です（各節の「限界」を参照）。

@@ -613,7 +613,7 @@ class PolicyConfigurationTests(unittest.TestCase):
         settings = self.load_json(".claude/settings.json")
         permissions = settings["permissions"]
         self.assertEqual(permissions["disableBypassPermissionsMode"], "disable")
-        for rule in ("Read(.env)", "Read(~/.ssh/**)", "Bash(sudo *)", "Bash(git push --force*)", "Bash(npm publish*)"):
+        for rule in ("Read(**/.env)", "Read(~/.ssh/**)", "Bash(sudo *)", "Bash(git push --force*)", "Bash(npm publish*)"):
             with self.subTest(rule=rule):
                 self.assertIn(rule, permissions["deny"])
         self.assertIn("Bash(git push *)", permissions["ask"])

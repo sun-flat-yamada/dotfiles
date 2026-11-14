@@ -18,3 +18,6 @@
 /.cursorrules @sun-flat-yamada
 /.gemini/ @sun-flat-yamada
 /.vscode/ @sun-flat-yamada
+/.github/hooks/ @sun-flat-yamada
+/config/ai/kiro/ @sun-flat-yamada
+/scripts/sync-permissions.py @sun-flat-yamada
