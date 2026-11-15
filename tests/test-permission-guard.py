@@ -654,7 +654,7 @@ class PolicyConfigurationTests(unittest.TestCase):
         self.assertGreater(len(rules), 80)
         for rule in rules:
             self.assertIn(rule["decision"], ("forbidden", "prompt"))
-            self.assertRegex(rule["justification"], r"^(N|C-HITL)-\d+")
+            self.assertRegex(rule["justification"], r"^(N-\d+|C-HITL(-\d+)?):")
             examples = [(text, True) for text in rule.get("match", [])] + [(text, False) for text in rule.get("not_match", [])]
             for example, expected in examples:
                 with self.subTest(pattern=rule["pattern"], example=example):
