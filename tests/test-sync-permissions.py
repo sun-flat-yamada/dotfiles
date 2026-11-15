@@ -179,6 +179,75 @@ class AdapterTest(unittest.TestCase):
         )
         self.assertEqual([skipped[2] for skipped in skips], ["**/*.pem"])
 
+    def test_codex_groups_prefix_globs_by_their_last_word(self):
+        skips = []
+        patterns = sync.codex_patterns(["sudo *", "su *", "git clone *", "git submodule add *", "* --yolo*"], rule(), skips)
+        self.assertEqual(patterns, [[["sudo", "su"]], ["git", "clone"], ["git", "submodule", "add"]])
+        self.assertEqual([skipped[2] for skipped in skips], ["* --yolo*"])
+
+    def test_codex_rules_carry_a_self_check_and_never_allow(self):
+        text = sync.render_codex([rule(summary="Secret access", shell=["op read *"]),
+                                  {"id": "A-02", "effect": "allow", "shell": ["ls *"]}], "", [])
+        self.assertIn('pattern = ["op", "read"]', text)
+        self.assertIn('decision = "forbidden"', text)
+        self.assertIn('match = ["op read"]', text)
+        self.assertNotIn('decision = "allow"', text)
+
+    def test_codex_native_rules_keep_their_examples(self):
+        native = {"codex": [{"pattern": ["git", "push", ["-f"]], "match": ["git push -f"], "not_match": ["git push"]}]}
+        text = sync.render_codex([rule(id="N-05", summary="Irreversible destruction", native=native)], "", [])
+        self.assertIn('not_match = ["git push"]', text)
+
+    def gemini_matches(self, regex: str, command: str) -> bool:
+        encoded = json.dumps({"command": command}, separators=(",", ":"))
+        return re.search('"command":"' + regex, encoded) is not None
+
+    def test_gemini_command_regex_keeps_the_glob_meaning(self):
+        exact = sync.gemini_command_regex("bash")
+        self.assertTrue(self.gemini_matches(exact, "bash"))
+        self.assertFalse(self.gemini_matches(exact, "bash script.sh"))
+        middle = sync.gemini_command_regex("git push * --force*")
+        self.assertTrue(self.gemini_matches(middle, "git push origin --force-with-lease"))
+        self.assertFalse(self.gemini_matches(middle, "git push origin feat/x"))
+        optional = sync.gemini_command_regex("* --yolo *")
+        self.assertTrue(self.gemini_matches(optional, "gemini --yolo"))
+        self.assertIsNone(sync.GEMINI_UNSAFE_QUANTIFIER.search(optional))
+
+    def test_gemini_regex_atoms(self):
+        self.assertEqual(sync.gemini_regex_atom("^su\\b"), "su\\b")
+        self.assertEqual(sync.gemini_regex_atom("--no-verify\\b|core\\.hooksPath"), ".*(--no-verify\\b|core\\.hooksPath)")
+        self.assertIsNone(sync.gemini_regex_atom("^a(b)?c"))
+        self.assertIsNone(sync.gemini_regex_atom("HISTFILE=|^history -c"))
+        self.assertIsNone(sync.gemini_regex_atom("x[\"']y"))
+
+    def test_gemini_file_pattern_honours_exceptions(self):
+        pattern = sync.gemini_file_pattern(["**/.env.*", "~/.ssh/**"], ["**/.env.example"])
+        check = lambda path: re.search(pattern, json.dumps({"file_path": path}, separators=(",", ":"))) is not None
+        self.assertTrue(check("app/.env.local"))
+        self.assertFalse(check("app/.env.example"))
+        self.assertTrue(check("/home/dev/.ssh/id_ed25519"))
+        self.assertFalse(check("src/main.py"))
+
+    def test_gemini_uses_word_prefixes_only_for_whole_words(self):
+        tables = sync.gemini_tables(rule(shell=["sudo *", "npm publish*"]), [])
+        self.assertEqual(tables[0]["commandPrefix"], ["sudo"])
+        self.assertEqual(tables[1]["commandRegex"], "npm publish")
+
+    def test_cursor_rules(self):
+        self.assertEqual(sync.cursor_shell("sudo *"), "Shell(sudo)")
+        self.assertEqual(sync.cursor_shell("git push --force*"), "Shell(git:push --force*)")
+        self.assertEqual(sync.cursor_shell("mkfs*"), "Shell(mkfs*)")
+        self.assertIsNone(sync.cursor_shell("* --yolo*"))
+        self.assertEqual(sync.cursor_path("~/.ssh/**"), "**/.ssh/**")
+        self.assertEqual(sync.cursor_path(".claude/**"), ".claude/**")
+        self.assertIsNone(sync.cursor_path("/etc/**"))
+
+    def test_cursor_denies_configuration_writes_it_cannot_ask_about(self):
+        rules = [{"id": "C-HITL-05", "effect": "ask", "write": [".claude/**"], "shell": ["gh *"]},
+                 {"id": "C-HITL-02", "effect": "ask", "write": ["**/package.json"]}]
+        permissions = json.loads(sync.render_cursor(rules, "{}", []))["permissions"]
+        self.assertEqual(permissions, {"allow": [], "deny": ["Write(.claude/**)"]})
+
     def test_install_antigravity_keeps_other_settings(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)

@@ -138,9 +138,9 @@ Any other destination requires **C-HITL**. Exfiltration and metadata endpoints a
 | :--- | :--- | :--- |
 | Canonical definition | `.agents/permissions/permission-policy.json`, `scripts/sync-permissions.py` | Source for every row marked *generated*. `--check` fails when a generated file drifts; `--report` lists what a tool cannot express. |
 | Claude Code | `.claude/settings.json` (*generated*: `permissions.allow/ask/deny`, `sandbox.network` domains), `.claude/hooks/permission-guard.py` | `allow`/`ask`/`deny` for the Bash and PowerShell tools, OS sandbox, PreToolUse guard for normalized N-tier and C-HITL checks. |
-| OpenAI Codex CLI | `.codex/config.toml`, `.codex/rules/permission-policy.rules` | Loaded only after the project is trusted. `allow` rules are not used because they run commands outside the sandbox. |
-| Gemini CLI | `.gemini/settings.json`, `.gemini/policies/permission-policy.toml` | Workspace policy tier is disabled upstream; copy the policy to `~/.gemini/policies/`. |
-| Cursor | `.cursor/cli.json`, `.cursor/permissions.json` | The CLI has no ask list: anything not allowed prompts, and some C-HITL items are stricter (deny). |
+| OpenAI Codex CLI | `.codex/config.toml`, `.codex/rules/permission-policy.rules` (*generated*) | Loaded only after the project is trusted. Prefix rules cover leading argv tokens only; the canonical `native.codex` entries add the token patterns globs cannot express. `allow` rules are not used because they run commands outside the sandbox. |
+| Gemini CLI | `.gemini/settings.json`, `.gemini/policies/permission-policy.toml` (*generated*) | Workspace policy tier is disabled upstream; copy the policy to `~/.gemini/policies/`. |
+| Cursor | `.cursor/cli.json` (*generated*), `.cursor/permissions.json` | The CLI has no ask list: anything not allowed prompts, and writes to agent and git configuration (C-HITL-05, -07, -10) are denied instead. `permissions.json` holds natural-language instructions and stays hand-written. |
 | GitHub Copilot (VS Code) | `.vscode/settings.json` (*generated*: the three `autoApprove` maps and the network domain lists) | A `false` terminal rule only requires approval; blocking relies on the shared guard hook and the sandbox. |
 | GitHub Copilot CLI | `.github/hooks/permission-guard.json`, `.agents/permissions/generated/copilot-cli-args.txt` (*generated*) | The hook runs the shared guard with `--format copilot`. The flags file carries `--deny-tool` / `--deny-url` for whole programs and hosts; finer rules rely on the hook. |
 | Kiro | `config/ai/kiro/permissions.yaml` (*generated*, installed to `~/.kiro/settings/permissions.yaml`) | Kiro reads permission rules from the user scope only, so a cloned repository cannot inject them. Install with the `ai` profile. |
@@ -154,5 +154,5 @@ Server-side controls complete the policy: branch protection with required review
 
 - Changes to this file or to any enforcement file listed above are C-HITL-05: a human must review the diff.
 - Change patterns in `.agents/permissions/permission-policy.json`, then run `python scripts/sync-permissions.py --write`. Never hand-edit a *generated* section: the next run overwrites it and CI rejects the drift.
-- Keep rule IDs stable and update every enforcement file in the same pull request. The Codex, Gemini CLI, and Cursor files are still maintained by hand.
+- Keep rule IDs stable and update every enforcement file in the same pull request. Files that are not pattern lists (`.codex/config.toml`, `.gemini/settings.json`, `.cursor/permissions.json`, the hook definitions) are maintained by hand.
 - Run `python tests/test-permission-guard.py`, `python tests/test-sync-permissions.py`, and the validation commands in the guide before opening the pull request.

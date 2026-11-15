@@ -8,16 +8,54 @@
     "read / write / read_except": "Path globs: `~/x` is under the home directory, `/x` is absolute, `**/x` matches at any depth, `./x` or a bare `x` is relative to the workspace root.",
     "fetch / network / domains": "Host names (`*.` prefix for subdomains): `fetch` for the fetch tool, `network` for sandboxed commands, `domains` for both.",
     "web_search": "true when the rule covers the built-in web search tool.",
-    "native": "Rules that exist in one tool only, keyed by tool name, written in that tool's own syntax."
+    "native": "Rules that exist in one tool only, keyed by tool name, written in that tool's own syntax (strings for claude and cursor, rule tables for codex and gemini)."
   },
   "rules": [
+    {
+      "id": "A-01",
+      "effect": "allow",
+      "summary": "Read and search workspace files",
+      "native": {
+        "cursor": [
+          "Read(**)"
+        ]
+      }
+    },
     {
       "id": "A-02",
       "effect": "allow",
       "summary": "Read-only inspection commands",
       "command_regex": [
         "^git (status|diff|log|show|blame)\\b(?!.*--(output|ext-diff|textconv))"
-      ]
+      ],
+      "native": {
+        "cursor": [
+          "Shell(ls)",
+          "Shell(pwd)",
+          "Shell(git:status*)",
+          "Shell(git:diff*)",
+          "Shell(git:log*)",
+          "Shell(git:show*)",
+          "Shell(git:blame*)"
+        ],
+        "gemini": [
+          {
+            "toolName": "run_shell_command",
+            "commandPrefix": [
+              "ls",
+              "pwd",
+              "cat",
+              "head",
+              "tail",
+              "grep",
+              "wc",
+              "which",
+              "whoami",
+              "date"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "A-03",
@@ -25,7 +63,22 @@
       "summary": "Edit ordinary workspace files",
       "write": [
         "./**"
-      ]
+      ],
+      "native": {
+        "cursor": [
+          "Write(src/**)",
+          "Write(lib/**)",
+          "Write(app/**)",
+          "Write(include/**)",
+          "Write(cmd/**)",
+          "Write(internal/**)",
+          "Write(pkg/**)",
+          "Write(test/**)",
+          "Write(tests/**)",
+          "Write(spec/**)",
+          "Write(docs/**)"
+        ]
+      }
     },
     {
       "id": "A-04",
@@ -324,6 +377,12 @@
       "native": {
         "claude": [
           "Bash(dangerouslyDisableSandbox:true)"
+        ],
+        "gemini": [
+          {
+            "toolName": "*",
+            "mcpName": "*"
+          }
         ]
       }
     },
@@ -384,7 +443,27 @@
       "write": [
         ".git/config",
         ".git/hooks/**"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              "git",
+              [
+                "-c",
+                "--config-env"
+              ]
+            ],
+            "match": [
+              "git -c core.fsmonitor=./x.sh status",
+              "git -c core.sshCommand=./x.sh fetch"
+            ],
+            "not_match": [
+              "git status"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "C-NET-01",
@@ -527,7 +606,84 @@
         "**/.env.example",
         "**/.env.sample",
         "**/.env.template"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              [
+                "cat",
+                "less",
+                "more",
+                "head",
+                "tail",
+                "cp",
+                "base64",
+                "xxd",
+                "source"
+              ],
+              [
+                ".env",
+                ".env.local",
+                ".env.production",
+                ".env.development",
+                "~/.aws/credentials",
+                "~/.ssh/id_rsa",
+                "~/.ssh/id_ed25519",
+                "~/.git-credentials",
+                "~/.netrc",
+                "~/.npmrc",
+                "~/.pypirc",
+                "~/.docker/config.json",
+                "~/.kube/config"
+              ]
+            ],
+            "match": [
+              "cat .env",
+              "cp ~/.ssh/id_rsa /tmp/key"
+            ],
+            "not_match": [
+              "cat .env.example"
+            ]
+          },
+          {
+            "pattern": [
+              [
+                "cat",
+                "less",
+                "more",
+                "head",
+                "tail",
+                "cp",
+                "base64",
+                "xxd"
+              ],
+              [
+                "~/.claude.json",
+                "~/.claude/.credentials.json",
+                "~/.codex/auth.json",
+                "~/.gemini/oauth_creds.json",
+                "~/.config/github-copilot/apps.json",
+                "~/.config/github-copilot/hosts.json",
+                "~/.vault-token"
+              ]
+            ],
+            "match": [
+              "cat ~/.claude.json",
+              "cp ~/.codex/auth.json /tmp/a"
+            ],
+            "not_match": [
+              "cat README.md"
+            ]
+          }
+        ],
+        "gemini": [
+          {
+            "toolName": "run_shell_command",
+            "commandRegex": ".*[^\\w.-]\\.env(\\.(?!example|sample|template)[\\w-]|[^\\w.-]|$)"
+          }
+        ]
+      }
     },
     {
       "id": "N-03",
@@ -541,7 +697,11 @@
         "crontab *",
         "runas *",
         "gsudo *",
-        "schtasks /create*"
+        "schtasks /create*",
+        "launchctl load *",
+        "launchctl bootstrap *",
+        "systemctl enable *",
+        "systemctl --user enable *"
       ],
       "powershell": [
         "sudo *",
@@ -576,7 +736,23 @@
         "~/.gitconfig",
         "/etc/**",
         "/usr/**"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              [
+                "crontab",
+                "launchctl"
+              ]
+            ],
+            "match": [
+              "crontab -e",
+              "launchctl load agent.plist"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "N-04",
@@ -620,7 +796,97 @@
         "~/.claude/settings.json",
         "~/.codex/config.toml",
         "~/.gemini/settings.json"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              "git",
+              [
+                "commit",
+                "push",
+                "merge",
+                "rebase"
+              ],
+              "--no-verify"
+            ],
+            "match": [
+              "git commit --no-verify -m wip",
+              "git push --no-verify"
+            ]
+          },
+          {
+            "pattern": [
+              "git",
+              "config",
+              [
+                "--local",
+                "--global",
+                "--system",
+                "--worktree",
+                "--unset",
+                "--unset-all",
+                "--add",
+                "--replace-all",
+                "set",
+                "unset"
+              ],
+              [
+                "core.hooksPath",
+                "core.hookspath"
+              ]
+            ],
+            "match": [
+              "git config --unset core.hooksPath",
+              "git config --global core.hooksPath /tmp/hooks"
+            ],
+            "not_match": [
+              "git config --global user.name dev"
+            ]
+          },
+          {
+            "pattern": [
+              [
+                "claude",
+                "gemini",
+                "codex",
+                "copilot",
+                "cursor-agent",
+                "q"
+              ],
+              [
+                "--dangerously-skip-permissions",
+                "--dangerously-bypass-approvals-and-sandbox",
+                "--yolo",
+                "--trust-all-tools",
+                "--allow-all-tools",
+                "--force"
+              ]
+            ],
+            "match": [
+              "claude --dangerously-skip-permissions",
+              "gemini --yolo",
+              "codex --dangerously-bypass-approvals-and-sandbox"
+            ],
+            "not_match": [
+              "gemini --version"
+            ]
+          }
+        ],
+        "cursor": [
+          "Shell(claude:*--dangerously-skip-permissions*)",
+          "Shell(codex:*--dangerously-bypass-approvals-and-sandbox*)",
+          "Shell(codex:*--yolo*)",
+          "Shell(codex:*danger-full-access*)",
+          "Shell(gemini:*--yolo*)",
+          "Shell(gemini:*--approval-mode*yolo*)",
+          "Shell(copilot:*--allow-all-tools*)",
+          "Shell(cursor-agent:*--force*)",
+          "Shell(q:*--trust-all-tools*)",
+          "Shell(git:commit * --no-verify*)",
+          "Shell(git:push * --no-verify*)"
+        ]
+      }
     },
     {
       "id": "N-05",
@@ -652,7 +918,12 @@
         "reboot*",
         "halt*",
         "poweroff*",
-        "gh repo delete*"
+        "gh repo delete*",
+        "diskpart *",
+        "vssadmin *",
+        "rm -fr /",
+        "rm -fr ~",
+        "rm -fr ."
       ],
       "powershell": [
         "Format-Volume *",
@@ -667,7 +938,104 @@
       ],
       "command_regex": [
         "^(diskpart|vssadmin|Format-Volume|Clear-Disk|Stop-Computer|Restart-Computer)\\b"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              "rm",
+              [
+                "-rf",
+                "-fr",
+                "-Rf",
+                "-rF",
+                "-r",
+                "-R"
+              ],
+              [
+                "/",
+                "/*",
+                "~",
+                "~/",
+                "~/*",
+                "$HOME",
+                ".",
+                "./",
+                "..",
+                "*"
+              ]
+            ],
+            "match": [
+              "rm -rf /",
+              "rm -rf ~",
+              "rm -fr ."
+            ],
+            "not_match": [
+              "rm -rf build"
+            ]
+          },
+          {
+            "pattern": [
+              [
+                "mkfs",
+                "mkfs.ext4",
+                "mkfs.xfs",
+                "mkfs.vfat",
+                "mkfs.fat",
+                "fdisk",
+                "sfdisk",
+                "parted",
+                "wipefs",
+                "shutdown",
+                "reboot",
+                "halt",
+                "poweroff"
+              ]
+            ],
+            "match": [
+              "mkfs.ext4 /dev/sda1",
+              "reboot"
+            ]
+          },
+          {
+            "pattern": [
+              [
+                "diskpart",
+                "vssadmin",
+                "wbadmin",
+                "bcdedit"
+              ]
+            ],
+            "match": [
+              "vssadmin delete shadows /all",
+              "diskpart /s script.txt"
+            ]
+          },
+          {
+            "pattern": [
+              "git",
+              "push",
+              [
+                "--force",
+                "-f",
+                "--force-with-lease",
+                "--force-if-includes",
+                "--mirror",
+                "--delete",
+                "-d",
+                "--prune"
+              ]
+            ],
+            "match": [
+              "git push --force-with-lease",
+              "git push -f origin feat/x"
+            ],
+            "not_match": [
+              "git push origin feat/x"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "N-06",
@@ -698,7 +1066,14 @@
         "python3",
         "node",
         "perl",
-        "ruby"
+        "ruby",
+        "git fetch ext::*",
+        "git pull ext::*",
+        "git ls-remote ext::*",
+        "powershell -enc *",
+        "pwsh -enc *",
+        "powershell * -enc *",
+        "pwsh * -enc *"
       ],
       "powershell": [
         "Invoke-Expression *",
@@ -706,7 +1081,62 @@
       ],
       "command_regex": [
         "^(Invoke-Expression|iex)\\b"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              [
+                "powershell",
+                "pwsh",
+                "powershell.exe",
+                "pwsh.exe"
+              ],
+              [
+                "-EncodedCommand",
+                "-encodedcommand",
+                "-enc",
+                "-ec",
+                "-e"
+              ]
+            ],
+            "match": [
+              "powershell -EncodedCommand aGk=",
+              "pwsh -enc aGk="
+            ],
+            "not_match": [
+              "pwsh -File install.ps1"
+            ]
+          },
+          {
+            "pattern": [
+              "git",
+              [
+                "clone",
+                "fetch",
+                "pull",
+                "ls-remote"
+              ],
+              [
+                "ext::sh",
+                "ext::bash",
+                "ext::ssh"
+              ]
+            ],
+            "match": [
+              "git clone ext::sh -c id"
+            ],
+            "not_match": [
+              "git clone https://github.com/org/repo.git"
+            ]
+          }
+        ],
+        "cursor": [
+          "Shell(git:*ext::*)",
+          "Shell(powershell:*-EncodedCommand*)",
+          "Shell(pwsh:*-EncodedCommand*)"
+        ]
+      }
     },
     {
       "id": "N-07",
@@ -728,7 +1158,8 @@
         "aws s3 rm * --recursive*",
         "gcloud projects delete*",
         "az group delete*",
-        "dropdb *"
+        "dropdb *",
+        "gh api */actions/secrets*"
       ]
     },
     {
@@ -750,13 +1181,43 @@
         "gh gpg-key add*",
         "gh repo deploy-key add*",
         "gh api * -X PUT */merge*",
-        "gh api */pulls/*/merge*"
+        "gh api */pulls/*/merge*",
+        "gh api */protection*"
       ],
       "powershell": [
         "git push * main",
         "git push * master",
         "gh pr merge*"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              "git",
+              "push",
+              [
+                "origin",
+                "upstream"
+              ],
+              [
+                "main",
+                "master",
+                "trunk",
+                "production",
+                "HEAD:main",
+                "HEAD:master"
+              ]
+            ],
+            "match": [
+              "git push origin main",
+              "git push upstream HEAD:master"
+            ],
+            "not_match": [
+              "git push origin feat/x"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "N-09",
@@ -862,7 +1323,63 @@
       "powershell": [
         "npm publish*",
         "docker push*"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              [
+                "uv",
+                "poetry",
+                "pdm",
+                "hatch",
+                "pipx"
+              ],
+              "run",
+              "twine",
+              "upload"
+            ],
+            "match": [
+              "uv run twine upload dist/pkg.whl",
+              "poetry run twine upload dist/pkg.whl"
+            ],
+            "not_match": [
+              "uv run pytest"
+            ]
+          },
+          {
+            "pattern": [
+              "uvx",
+              "twine",
+              "upload"
+            ],
+            "match": [
+              "uvx twine upload dist/pkg.whl"
+            ],
+            "not_match": [
+              "uvx twine check dist/pkg.whl"
+            ]
+          },
+          {
+            "pattern": [
+              [
+                "python",
+                "python3"
+              ],
+              "-m",
+              "twine",
+              "upload"
+            ],
+            "match": [
+              "python3 -m twine upload dist/pkg.whl"
+            ],
+            "not_match": [
+              "python3 -m twine check dist/pkg.whl",
+              "python3 -m pytest"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "N-11",
@@ -889,7 +1406,9 @@
       "summary": "Audit trail tampering",
       "shell": [
         "history -c*",
-        "unset HISTFILE*"
+        "unset HISTFILE*",
+        "rm * ~/.claude/projects*",
+        "rm * ~/.codex/sessions*"
       ],
       "powershell": [
         "Clear-History*",
@@ -902,7 +1421,43 @@
       "write": [
         "~/.claude/projects/**",
         "~/.codex/sessions/**"
-      ]
+      ],
+      "native": {
+        "codex": [
+          {
+            "pattern": [
+              [
+                "rm",
+                "shred",
+                "truncate",
+                "unlink"
+              ],
+              [
+                "-rf",
+                "-fr",
+                "-r",
+                "-f",
+                "-s"
+              ],
+              [
+                "~/.claude/projects",
+                "~/.codex/sessions",
+                "~/.codex/history.jsonl",
+                "~/.claude/history.jsonl",
+                "~/.gemini/tmp",
+                "/var/log"
+              ]
+            ],
+            "match": [
+              "rm -rf ~/.claude/projects",
+              "rm -rf ~/.codex/sessions"
+            ],
+            "not_match": [
+              "rm -rf build"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

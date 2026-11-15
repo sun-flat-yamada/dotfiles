@@ -15,6 +15,8 @@
 --deny-tool=shell(reboot)
 --deny-tool=shell(halt)
 --deny-tool=shell(poweroff)
+--deny-tool=shell(diskpart)
+--deny-tool=shell(vssadmin)
 --deny-tool=shell(Format-Volume)
 --deny-tool=shell(Clear-Disk)
 --deny-tool=shell(Stop-Computer)

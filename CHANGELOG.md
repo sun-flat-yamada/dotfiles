@@ -5,7 +5,7 @@ category: "documentation"
 type: "changelog"
 status: "active"
 date: 2026-10-22
-updated: 2026-11-14
+updated: 2026-11-15
 lang: "en"
 tags: ["changelog", "release", "dotfiles"]
 ---
@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+- **Codex, Gemini CLI, and Cursor CLI are now generated** from the canonical permission definition (`.codex/rules/permission-policy.rules`, `.gemini/policies/permission-policy.toml`, `.cursor/cli.json`). Rules that the shared pattern fields cannot express live in the canonical file under `native.codex`, `native.gemini`, and `native.cursor`.
+- Canonical additions that reach every tool: `launchctl load` / `systemctl enable` (N-03), `diskpart` / `vssadmin` (N-05), `git fetch|pull|ls-remote ext::` and `-enc` PowerShell payloads (N-06), `gh api …/protection` (N-08), `gh api …/actions/secrets` (N-07), and deleting agent transcripts with `rm` (N-12).
+- Antigravity renders a glob as a word prefix only when it ends in a space and `*`; other globs become `command(regex:…)`.
 
 ### Added
 - **Canonical permission definition** (`.agents/permissions/permission-policy.json`) and **generator** (`scripts/sync-permissions.py` with `--check`, `--write`, `--report`, `--install-antigravity`): one tool-neutral pattern list per rule ID, rendered into each tool's own format. CI fails when a generated file drifts.

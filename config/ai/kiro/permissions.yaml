@@ -106,6 +106,10 @@ rules:
       - "runas *"
       - "gsudo *"
       - "schtasks /create*"
+      - "launchctl load *"
+      - "launchctl bootstrap *"
+      - "systemctl enable *"
+      - "systemctl --user enable *"
       - "Start-Process * -Verb RunAs*"
       - "Register-ScheduledTask *"
       - "New-Service *"
@@ -193,6 +197,11 @@ rules:
       - "halt*"
       - "poweroff*"
       - "gh repo delete*"
+      - "diskpart *"
+      - "vssadmin *"
+      - "rm -fr /"
+      - "rm -fr ~"
+      - "rm -fr ."
       - "Format-Volume *"
       - "Clear-Disk *"
       - "Stop-Computer*"
@@ -218,6 +227,13 @@ rules:
       - "node"
       - "perl"
       - "ruby"
+      - "git fetch ext::*"
+      - "git pull ext::*"
+      - "git ls-remote ext::*"
+      - "powershell -enc *"
+      - "pwsh -enc *"
+      - "powershell * -enc *"
+      - "pwsh * -enc *"
       - "Invoke-Expression *"
       - "* -EncodedCommand *"
     effect: deny
@@ -240,6 +256,7 @@ rules:
       - "gcloud projects delete*"
       - "az group delete*"
       - "dropdb *"
+      - "gh api */actions/secrets*"
     effect: deny
   # N-08 Self-approval and protected branches
   - capability: shell
@@ -259,6 +276,7 @@ rules:
       - "gh repo deploy-key add*"
       - "gh api * -X PUT */merge*"
       - "gh api */pulls/*/merge*"
+      - "gh api */protection*"
     effect: deny
   # N-09 Exfiltration channels
   - capability: shell
@@ -416,6 +434,8 @@ rules:
     match:
       - "history -c*"
       - "unset HISTFILE*"
+      - "rm * ~/.claude/projects*"
+      - "rm * ~/.codex/sessions*"
       - "Clear-History*"
       - "Clear-EventLog *"
     effect: deny

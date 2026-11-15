@@ -5,7 +5,7 @@ category: "guide"
 type: "security"
 status: "active"
 date: 2026-10-01
-updated: 2026-11-14
+updated: 2026-11-15
 lang: "ja"
 tags:
   - "security"
@@ -38,9 +38,9 @@ tags:
 | 共通（正規ポリシー） | `.agents/rules/permission-rules-general.md` | 各エージェントの指示ファイルから参照 |
 | 共通（機械可読な正本） | `.agents/permissions/permission-policy.json`、`scripts/sync-permissions.py` | ルールIDごとのパターンを1か所で管理し、下表の「生成」と書かれたファイルを生成（5.6節） |
 | Claude Code | `.claude/settings.json`（権限リストとネットワーク許可は生成）、`.claude/hooks/permission-guard.py` | `allow` はワークスペース信頼後に有効。`deny`/`ask` は即時有効 |
-| OpenAI Codex CLI | `.codex/config.toml`、`.codex/rules/permission-policy.rules` | プロジェクトを trusted にした後に読み込み |
-| Gemini CLI / Antigravity | `.gemini/settings.json`、`.gemini/policies/permission-policy.toml` | ポリシーは `~/.gemini/policies/` へのコピーが必要（後述） |
-| Cursor | `.cursor/cli.json`（CLI）、`.cursor/permissions.json`（IDE） | リポジトリを開くと読み込み |
+| OpenAI Codex CLI | `.codex/config.toml`、`.codex/rules/permission-policy.rules`（生成） | プロジェクトを trusted にした後に読み込み |
+| Gemini CLI | `.gemini/settings.json`、`.gemini/policies/permission-policy.toml`（生成） | ポリシーは `~/.gemini/policies/` へのコピーが必要（後述） |
+| Cursor | `.cursor/cli.json`（CLI、生成）、`.cursor/permissions.json`（IDE、手書き） | リポジトリを開くと読み込み |
 | GitHub Copilot（VS Code） | `.vscode/settings.json`（自動承認マップとネットワーク許可は生成） | ワークスペース設定として適用 |
 | GitHub Copilot CLI | `.github/hooks/permission-guard.json`、`.agents/permissions/generated/copilot-cli-args.txt`（生成） | フックはリポジトリで自動読み込み。フラグは起動時に渡す（5.7節） |
 | Kiro | `config/ai/kiro/permissions.yaml`（生成） | `~/.kiro/settings/permissions.yaml` へ導入（5.8節） |
@@ -219,7 +219,7 @@ N-01 秘密情報へのアクセス／N-02 秘密情報の書き込み・漏え�
 | `command_regex` | コマンドを正規表現で判定するツール向けの式 |
 | `read` / `write` / `read_except` | パスのglob。`~/x` はホーム、`/x` は絶対パス、`**/x` は任意の階層、`./x` または `x` はワークスペース相対 |
 | `fetch` / `network` / `domains` | ホスト名。`fetch` は取得ツール、`network` はサンドボックス内コマンド、`domains` は両方 |
-| `native` | 1つのツールにしかないルール（そのツールの書式のまま） |
+| `native` | 1つのツールにしかないルール（そのツールの書式のまま）。Codex のトークンパターンや Cursor の許可ディレクトリなど、共通項目から導けないものを置く |
 
 ```bash
 python scripts/sync-permissions.py --check    # 生成物が正本と一致するか（CIで実行）
@@ -227,7 +227,7 @@ python scripts/sync-permissions.py --write    # 正本から全ツールの設�
 python scripts/sync-permissions.py --report   # ツールごとに表現できなかった項目を一覧
 ```
 
-生成スクリプトは各ファイルのうち権限に関するキーだけを書き換え、サンドボックスやフックなど他のキーは保持します。ツールが表現できない項目は黙って捨てず、`--report` に理由付きで出力します。Codex・Gemini CLI・Cursor のファイルは今回の生成対象外で、従来どおり手作業で維持します。
+生成スクリプトは各ファイルのうち権限に関するキーだけを書き換え、サンドボックスやフックなど他のキーは保持します。ツールが表現できない項目は黙って捨てず、`--report` に理由付きで出力します。パターンの一覧ではないファイル（`.codex/config.toml`、`.gemini/settings.json`、自然言語の指示を持つ `.cursor/permissions.json`、フック定義）は手書きのままです。
 
 | ツール | 正本からの変換 | 表現できない項目 |
 | :--- | :--- | :--- |
@@ -235,7 +235,10 @@ python scripts/sync-permissions.py --report   # ツールごとに表現でき�
 | Copilot（VS Code） | globを正規表現へ変換し、ルールIDごとに1つの `false` エントリへ集約 | ホーム・絶対パス（編集承認はワークスペース内のみ対象） |
 | Copilot CLI | プログラム全体または `git`/`gh` の第1階層サブコマンドを拒否するものだけ `--deny-tool=shell(…)` に | それより細かい条件、`ask`、パス（フックが担当） |
 | Kiro | `shell` / `filesystem` / `fs_write` / `web_fetch` / `sandbox_network` の各ルール。`read_except` は `exclude` に対応 | `command_regex`、ワークスペース全体への書き込み許可 |
-| Antigravity | 前方一致で書けるものは `command(語)`、それ以外は `command(regex:…)`。パスは `read_file` / `write_file` | globを含むパス（`**/*.pem` など）、サンドボックスのドメイン許可 |
+| Codex CLI | 前方一致のglobを argv トークンの `prefix_rule` へ。最後の語だけが違うものは1つのルールに集約し、各ルールに自己検証用の `match` 例を付与 | 途中に `*` を含むglob（`native.codex` で補完）、正規表現、パス、ドメイン（サンドボックスが担当） |
+| Gemini CLI | 語単位の前方一致は `commandPrefix`、それ以外は `commandRegex`。パスは `argsPattern`（`read_except` は否定先読みに対応） | Gemini のローダーが破棄する形の正規表現、サンドボックスのドメイン許可 |
+| Cursor CLI | `Shell(コマンド:引数glob)` / `Read(…)` / `Write(…)` / `WebFetch(…)` | `ask`（未許可は都度確認）、コマンド名が `*` で始まるglob、絶対パス |
+| Antigravity | 語単位の前方一致で書けるものは `command(語)`、それ以外は `command(regex:…)`。パスは `read_file` / `write_file` | globを含むパス（`**/*.pem` など）、サンドボックスのドメイン許可 |
 
 ### 5.7 GitHub Copilot CLI
 
