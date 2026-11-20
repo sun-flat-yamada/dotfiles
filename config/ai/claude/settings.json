@@ -1,4 +1,9 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "includeCoAuthoredBy": false,
   "env": {},
   "enableWorkflows": true,
   "enableAllProjectMcpServers": false,
